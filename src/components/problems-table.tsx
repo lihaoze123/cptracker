@@ -4,6 +4,7 @@ import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowMo
 import { Badge } from "@/components/ui/badge";
 import { RatingBadge } from "@/components/rating-badge";
 import { SolutionDialog } from "@/components/solution-dialog";
+import { ProblemTextDialog } from "@/components/problem-text-dialog";
 import type { SolvedProblem } from "@/data/mock";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
@@ -20,7 +21,19 @@ interface ProblemsTableProps {
   onEditProblem?: (id: number, changes: Partial<SolvedProblem>) => Promise<boolean>;
 }
 
-function extractProblemInfo(url: string): { source: string; name: string } {
+function extractURLFromText(text: string): string | null {
+  // 正则表达式匹配 http:// 或 https:// 开头的 URL
+  const urlRegex = /(https?:\/\/[^\s]+)/i;
+  const match = text.match(urlRegex);
+  return match ? match[1] : null;
+}
+
+function extractProblemInfo(text: string): { source: string; name: string; isURL: boolean } {
+  const url = extractURLFromText(text);
+
+  if (!url) {
+    return { source: "Text", name: text, isURL: false };
+  }
   try {
     const urlObj = new URL(url);
     const hostname = urlObj.hostname;
@@ -31,6 +44,40 @@ function extractProblemInfo(url: string): { source: string; name: string } {
         return {
           source: "Codeforces",
           name: `CF${match[1]}${match[2]}`,
+          isURL: true,
+        };
+      }
+    }
+    
+    if (hostname.includes("codeforces.com")) {
+      const match = url.match(/problemset\/problem\/(\d+)\/([A-Z]\d?)/);
+      if (match) {
+        return {
+          source: "Codeforces",
+          name: `CF${match[1]}${match[2]}`,
+          isURL: true,
+        };
+      }
+    }
+
+    if (hostname.includes("luogu.com.cn")) {
+      const match = url.match(/\/([A-Z])(\d+)/);
+      if (match) {
+        return {
+          source: "Luogu",
+          name: `${match[1]}${match[2]}`,
+          isURL: true,
+        };
+      }
+    }
+
+    if (hostname.includes("vjudge.net")) {
+      const match = url.match(/\/problem\/(.*)/);
+      if (match) {
+        return {
+          source: "Vjudge",
+          name: `${match[1]}`,
+          isURL: true,
         };
       }
     }
@@ -41,6 +88,7 @@ function extractProblemInfo(url: string): { source: string; name: string } {
         return {
           source: "AtCoder",
           name: match[2].toUpperCase(),
+          isURL: true,
         };
       }
     }
@@ -51,13 +99,14 @@ function extractProblemInfo(url: string): { source: string; name: string } {
         return {
           source: "LeetCode",
           name: match[1],
+          isURL: true,
         };
       }
     }
 
-    return { source: hostname, name: url };
+    return { source: hostname, name: url, isURL: true };
   } catch {
-    return { source: "Unknown", name: url };
+    return { source: "Unknown", name: url, isURL: true };
   }
 }
 
@@ -118,17 +167,23 @@ export function ProblemsTable({ problems, onFilteredDataChange, onAddProblem, on
           <DataTableColumnHeader column={column} label="Problem" />
         ),
         cell: ({ row }) => {
-          const { name } = extractProblemInfo(row.original.题目);
-          return (
-            <a
-              href={row.original.题目}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:underline"
-            >
-              {name}
-            </a>
-          );
+          const { name, isURL } = extractProblemInfo(row.original.题目);
+
+          if (isURL) {
+            const url = extractURLFromText(row.original.题目);
+            return (
+              <a
+                href={url || row.original.题目}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline"
+              >
+                {name}
+              </a>
+            );
+          }
+
+          return <ProblemTextDialog text={row.original.题目} />;
         },
         filterFn: (row: Row<SolvedProblem>, _id: string, filterValue: string) => {
           if (!filterValue) return true;
@@ -325,7 +380,7 @@ export function ProblemsTable({ problems, onFilteredDataChange, onAddProblem, on
     []
   );
 
-  const [sorting, setSorting] = useState<SortingState>([{ id: "日期", desc: true }]);
+  const [sorting, setSorting] = useState<SortingState>([{ id: "date", desc: true }]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 

@@ -24,7 +24,12 @@ interface AddProblemSheetProps {
 function getUTC8DateTime() {
   const now = new Date();
   const utc8 = new Date(now.getTime() + 8 * 60 * 60 * 1000);
-  return utc8.toISOString().slice(0, 16).replace("T", " ") + ":00";
+  const iso = utc8.toISOString();
+  const year = iso.slice(0, 4);
+  const month = iso.slice(5, 7);
+  const day = iso.slice(8, 10);
+  const time = iso.slice(11, 19);
+  return `${year}/${month}/${day} ${time}`;
 }
 
 function getDefaultFormData() {
@@ -130,9 +135,9 @@ export function AddProblemSheet({ onAdd }: AddProblemSheetProps) {
         <div className="grid flex-1 auto-rows-min gap-4 px-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="problem-url">
-              Problem URL <span className="text-destructive">*</span>
+              Problem <span className="text-destructive">*</span>
             </Label>
-            <Input
+            <Textarea
               id="problem-url"
               placeholder="https://codeforces.com/contest/1234/problem/A"
               value={formData.题目}
@@ -160,8 +165,8 @@ export function AddProblemSheet({ onAdd }: AddProblemSheetProps) {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="solution">Solution URL</Label>
-            <Input
+            <Label htmlFor="solution">Solution</Label>
+            <Textarea
               id="solution"
               placeholder="https://github.com/user/solutions/..."
               value={formData.题解}
@@ -186,9 +191,9 @@ export function AddProblemSheet({ onAdd }: AddProblemSheetProps) {
             <Input
               id="date"
               type="datetime-local"
-              value={formData.日期.slice(0, 16).replace(" ", "T")}
+              value={formData.日期.slice(0, 16).replace(/\//g, "-").replace(" ", "T")}
               onChange={(e) =>
-                handleChange("日期", e.target.value.replace("T", " ") + ":00")
+                handleChange("日期", e.target.value.replace(/-/g, "/").replace("T", " ") + ":00")
               }
             />
           </div>

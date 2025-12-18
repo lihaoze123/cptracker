@@ -37,9 +37,9 @@ export function EditProblemSheet({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // 当 problem 变化时更新表单数据
+  // 当 problem 变化或 Sheet 打开时更新表单数据
   useEffect(() => {
-    if (problem) {
+    if (problem && open) {
       setFormData({
         题目: problem.题目,
         难度: problem.难度,
@@ -49,7 +49,7 @@ export function EditProblemSheet({
       });
       setErrors({});
     }
-  }, [problem]);
+  }, [problem, open]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -121,12 +121,12 @@ export function EditProblemSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="grid flex-1 auto-rows-min gap-4 px-4 py-4">
+        <div className="grid flex-1 auto-rows-min gap-4 px-4 py-4 overflow-y-auto max-h-[calc(100vh-12rem)]">
           <div className="grid gap-2">
             <Label htmlFor="edit-problem-url">
-              Problem URL <span className="text-destructive">*</span>
+              Problem<span className="text-destructive">*</span>
             </Label>
-            <Input
+            <Textarea
               id="edit-problem-url"
               placeholder="https://codeforces.com/contest/1234/problem/A"
               value={formData.题目}
@@ -180,9 +180,9 @@ export function EditProblemSheet({
             <Input
               id="edit-date"
               type="datetime-local"
-              value={formData.日期.slice(0, 16).replace(" ", "T")}
+              value={formData.日期.slice(0, 16).replace(/\//g, "-").replace(" ", "T")}
               onChange={(e) =>
-                handleChange("日期", e.target.value.replace("T", " ") + ":00")
+                handleChange("日期", e.target.value.replace(/-/g, "/").replace("T", " ") + ":00")
               }
             />
           </div>

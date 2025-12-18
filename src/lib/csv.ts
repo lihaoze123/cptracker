@@ -73,12 +73,23 @@ export function parseCSV(file: File): Promise<CSVImportResult> {
             return;
           }
 
+          // 统一处理标签分隔符：全角逗号、顿号、半角逗号、空格 → 半角逗号
+          const normalizedTags = (row.关键词?.trim() || "")
+            .replace(/[，、]/g, ",")
+            .split(/[,\s]+/)
+            .map((t) => t.trim())
+            .filter(Boolean)
+            .join(", ");
+
           success.push({
             题目: row.题目.trim(),
             难度: difficulty,
             题解: row.题解?.trim() || "",
-            关键词: row.关键词?.trim() || "",
-            日期: row.日期?.trim() || new Date().toISOString().replace("T", " ").slice(0, 19),
+            关键词: normalizedTags,
+            日期: row.日期?.trim() || (() => {
+              const iso = new Date().toISOString();
+              return `${iso.slice(0, 4)}/${iso.slice(5, 7)}/${iso.slice(8, 10)} ${iso.slice(11, 19)}`;
+            })(),
           });
         });
 
@@ -101,7 +112,7 @@ export function generateCSVTemplate(): void {
       难度: "1600",
       题解: "https://github.com/user/solutions/1234A.cpp",
       关键词: "DP, 贪心",
-      日期: "2025-01-01 10:00:00",
+      日期: "2025/01/01 10:00:00",
     },
   ];
 

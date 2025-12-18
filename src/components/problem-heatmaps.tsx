@@ -1,26 +1,88 @@
 import HeatMap from "@uiw/react-heat-map";
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { SolvedProblem } from "@/data/mock";
 
 interface ProblemHeatmapsProps {
   problems: SolvedProblem[];
 }
 
+interface YearHeatmapProps extends ProblemHeatmapsProps {
+  selectedYear: number;
+  onYearChange: (year: number) => void;
+  availableYears: number[];
+}
+
 function parseDate(dateStr: string): string {
-  return dateStr.split(" ")[0];
+  // Convert yyyy/mm/dd or yyyy-mm-dd to yyyy-mm-dd for HeatMap compatibility
+  return dateStr.split(" ")[0].replace(/\//g, "-");
 }
 
-function getStartDate(): Date {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth() - 11, 1);
+function getYearStartDate(year: number): Date {
+  return new Date(year, 0, 1);
 }
 
-function getEndDate(): Date {
-  return new Date();
+function getYearEndDate(year: number): Date {
+  return new Date(year, 11, 31);
 }
 
-export function ProblemCountHeatmap({ problems }: ProblemHeatmapsProps) {
+function getAvailableYears(problems: SolvedProblem[]): number[] {
+  const years = new Set<number>();
+  const currentYear = new Date().getFullYear();
+  years.add(currentYear);
+
+  problems.forEach((p) => {
+    const date = parseDate(p.日期);
+    const year = parseInt(date.split("-")[0], 10);
+    if (!isNaN(year)) {
+      years.add(year);
+    }
+  });
+
+  return Array.from(years).sort((a, b) => b - a);
+}
+
+function YearSelector({
+  selectedYear,
+  onYearChange,
+  availableYears,
+}: {
+  selectedYear: number;
+  onYearChange: (year: number) => void;
+  availableYears: number[];
+}) {
+  return (
+    <Select
+      value={selectedYear.toString()}
+      onValueChange={(value) => onYearChange(parseInt(value, 10))}
+    >
+      <SelectTrigger className="w-24 h-7">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {availableYears.map((year) => (
+          <SelectItem key={year} value={year.toString()}>
+            {year}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+export function ProblemCountHeatmap({
+  problems,
+  selectedYear,
+  onYearChange,
+  availableYears,
+}: YearHeatmapProps) {
   const heatmapData = useMemo(() => {
     const countByDate: Record<string, number> = {};
 
@@ -38,15 +100,21 @@ export function ProblemCountHeatmap({ problems }: ProblemHeatmapsProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Daily Problem Count</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base">Daily Problem Count</CardTitle>
+          <YearSelector
+            selectedYear={selectedYear}
+            onYearChange={onYearChange}
+            availableYears={availableYears}
+          />
+        </div>
       </CardHeader>
-      <CardContent className="overflow-x-auto">
+      <CardContent className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <HeatMap
           value={heatmapData}
-          startDate={getStartDate()}
-          endDate={getEndDate()}
-          width="100%"
-          style={{ color: "var(--foreground)" }}
+          startDate={getYearStartDate(selectedYear)}
+          endDate={getYearEndDate(selectedYear)}
+          style={{ color: "var(--foreground)", minWidth: 720 }}
           panelColors={{
             0: "var(--muted)",
             1: "#9be9a8",
@@ -93,7 +161,12 @@ function getDifficultyColor(level: number): string {
   }
 }
 
-export function MaxDifficultyHeatmap({ problems }: ProblemHeatmapsProps) {
+export function MaxDifficultyHeatmap({
+  problems,
+  selectedYear,
+  onYearChange,
+  availableYears,
+}: YearHeatmapProps) {
   const heatmapData = useMemo(() => {
     const maxByDate: Record<string, number> = {};
 
@@ -114,15 +187,21 @@ export function MaxDifficultyHeatmap({ problems }: ProblemHeatmapsProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Daily Max Difficulty</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base">Daily Max Difficulty</CardTitle>
+          <YearSelector
+            selectedYear={selectedYear}
+            onYearChange={onYearChange}
+            availableYears={availableYears}
+          />
+        </div>
       </CardHeader>
-      <CardContent className="overflow-x-auto">
+      <CardContent className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <HeatMap
           value={heatmapData}
-          startDate={getStartDate()}
-          endDate={getEndDate()}
-          width="100%"
-          style={{ color: "var(--foreground)" }}
+          startDate={getYearStartDate(selectedYear)}
+          endDate={getYearEndDate(selectedYear)}
+          style={{ color: "var(--foreground)", minWidth: 720 }}
           panelColors={{
             0: "var(--muted)",
             1: getDifficultyColor(1),
@@ -191,3 +270,5 @@ export function MaxDifficultyHeatmap({ problems }: ProblemHeatmapsProps) {
     </Card>
   );
 }
+
+export { getAvailableYears };

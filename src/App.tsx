@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { NuqsAdapter } from "nuqs/adapters/react";
 import {
   ProblemCountHeatmap,
   MaxDifficultyHeatmap,
+  getAvailableYears,
 } from "@/components/problem-heatmaps";
 import { ProblemsTable } from "@/components/problems-table";
 import { CSVToolbar } from "@/components/csv-toolbar";
@@ -29,6 +30,12 @@ function Dashboard() {
   };
 
   const [filteredProblems, setFilteredProblems] = useState<SolvedProblem[]>([]);
+  const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear());
+
+  const availableYears = useMemo(
+    () => getAvailableYears(dbProblems),
+    [dbProblems]
+  );
 
   useEffect(() => {
     setFilteredProblems(dbProblems);
@@ -47,7 +54,7 @@ function Dashboard() {
       <div className="container mx-auto py-8 px-4 space-y-6">
         <header className="flex items-start justify-between">
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold">Competitive Programming Dashboard</h1>
+            <h1 className="text-2xl font-bold">Competitive Programming Tracker</h1>
             <p className="text-muted-foreground">
               Track your problem-solving progress and performance
             </p>
@@ -61,8 +68,18 @@ function Dashboard() {
         </header>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <ProblemCountHeatmap problems={filteredProblems} />
-          <MaxDifficultyHeatmap problems={filteredProblems} />
+          <ProblemCountHeatmap
+            problems={filteredProblems}
+            selectedYear={selectedYear}
+            onYearChange={setSelectedYear}
+            availableYears={availableYears}
+          />
+          <MaxDifficultyHeatmap
+            problems={filteredProblems}
+            selectedYear={selectedYear}
+            onYearChange={setSelectedYear}
+            availableYears={availableYears}
+          />
         </div>
 
         <ProblemsTable
