@@ -96,15 +96,16 @@ export function SolutionDialog({
   const handleOpenChange = (nextOpen: boolean) => {
     if (solutionId) {
       navigate({
-        search: (prev) => {
-          const nextSearch = { ...(prev as Record<string, unknown>) };
+        // Typed as any to allow use outside a specific route context
+        search: ((prev: Record<string, unknown>) => {
+          const nextSearch = { ...prev };
           if (nextOpen) {
             nextSearch.solution = solutionId;
           } else if ((prev as { solution?: string }).solution === solutionId) {
             delete nextSearch.solution;
           }
           return nextSearch;
-        },
+        }) as any,
         replace: true,
       });
     }
