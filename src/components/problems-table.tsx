@@ -20,6 +20,7 @@ interface ProblemsTableProps {
   onFilteredDataChange?: (filteredProblems: SolvedProblem[]) => void;
   onAddProblem?: (problem: Omit<SolvedProblem, "id">) => Promise<boolean>;
   onEditProblem?: (id: number, changes: Partial<SolvedProblem>) => Promise<boolean>;
+  readOnly?: boolean;
 }
 
 function formatDate(dateStr: string): string {
@@ -33,7 +34,7 @@ function formatDate(dateStr: string): string {
   });
 }
 
-export function ProblemsTable({ problems, onFilteredDataChange, onAddProblem, onEditProblem }: ProblemsTableProps) {
+export function ProblemsTable({ problems, onFilteredDataChange, onAddProblem, onEditProblem, readOnly = false }: ProblemsTableProps) {
   const [editingProblem, setEditingProblem] = useState<SolvedProblem | null>(null);
   const [editSheetOpen, setEditSheetOpen] = useState(false);
 
@@ -43,7 +44,8 @@ export function ProblemsTable({ problems, onFilteredDataChange, onAddProblem, on
   };
 
   const columns = useMemo<ColumnDef<SolvedProblem>[]>(
-    () => [
+    () => {
+      const baseColumns: ColumnDef<SolvedProblem>[] = [
       {
         id: "source",
         accessorFn: (row) => extractProblemInfo(row.题目).source,
@@ -272,7 +274,11 @@ export function ProblemsTable({ problems, onFilteredDataChange, onAddProblem, on
         enableColumnFilter: true,
         enableSorting: true,
       },
-      {
+    ];
+
+    // Add actions column only if not in read-only mode
+    if (!readOnly) {
+      baseColumns.push({
         id: "actions",
         size: 40,
         header: () => null,
@@ -289,10 +295,13 @@ export function ProblemsTable({ problems, onFilteredDataChange, onAddProblem, on
         ),
         enableSorting: false,
         enableColumnFilter: false,
-      },
-    ],
+      });
+    }
+
+    return baseColumns;
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [readOnly]
   );
 
   const [sorting, setSorting] = useState<SortingState>([{ id: "date", desc: true }]);
@@ -336,10 +345,10 @@ export function ProblemsTable({ problems, onFilteredDataChange, onAddProblem, on
     <>
       <DataTable table={table}>
         <DataTableToolbar table={table}>
-          {onAddProblem && <AddProblemSheet onAdd={onAddProblem} />}
+          {!readOnly && onAddProblem && <AddProblemSheet onAdd={onAddProblem} />}
         </DataTableToolbar>
       </DataTable>
-      {onEditProblem && (
+      {!readOnly && onEditProblem && (
         <EditProblemSheet
           problem={editingProblem}
           open={editSheetOpen}

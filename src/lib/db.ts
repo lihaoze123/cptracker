@@ -3,14 +3,17 @@ import type { SolvedProblem } from "@/data/mock";
 
 export interface StoredProblem extends SolvedProblem {
   syncedAt: number;
+  supabase_id?: string; // 云端同步时的 Supabase UUID
+  pending_sync?: boolean; // 标记需要同步到云端
+  pending_delete?: boolean; // 标记需要从云端删除
 }
 
 const db = new Dexie("ProblemsDB") as Dexie & {
   problems: EntityTable<StoredProblem, "id">;
 };
 
-db.version(1).stores({
-  problems: "++id, 难度, 日期, syncedAt",
+db.version(2).stores({
+  problems: "++id, 难度, 日期, syncedAt, supabase_id, pending_sync, pending_delete",
 });
 
 export { db };
