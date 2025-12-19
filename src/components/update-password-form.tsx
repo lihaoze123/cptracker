@@ -12,7 +12,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useState } from 'react'
 
-export function UpdatePasswordForm({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
+interface UpdatePasswordFormProps extends React.ComponentPropsWithoutRef<'div'> {
+  onSuccess?: () => void
+}
+
+export function UpdatePasswordForm({ className, onSuccess, ...props }: UpdatePasswordFormProps) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -26,9 +30,8 @@ export function UpdatePasswordForm({ className, ...props }: React.ComponentProps
     try {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error
-      // Redirect to dashboard
-      window.location.hash = ''
-      window.location.reload()
+      // Call success callback to navigate back to dashboard
+      onSuccess?.()
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred')
     } finally {

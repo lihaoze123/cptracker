@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { Link } from "@tanstack/react-router";
 import { ProblemsTable } from "@/components/problems-table";
 import {
   ProblemCountHeatmap,
@@ -119,10 +120,10 @@ export function PublicProfileView({ username, onBack }: PublicProfileViewProps) 
               </a>
             </Button>
             <Button variant="outline" size="sm" asChild>
-              <a href="/" className="flex items-center gap-2">
+              <Link to="/" className="flex items-center gap-2">
                 <ExternalLink className="h-4 w-4" />
                 View My Tracker
-              </a>
+              </Link>
             </Button>
           </div>
         </header>

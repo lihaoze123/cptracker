@@ -201,7 +201,5 @@ function ForgotPasswordFormWrapper({ onNavigate }: { onNavigate: (view: AuthView
 }
 
 function UpdatePasswordFormWrapper({ onSuccess }: { onSuccess?: () => void }) {
-  // Handle success callback if password update form had one
-  void onSuccess;
-  return <UpdatePasswordForm />;
+  return <UpdatePasswordForm onSuccess={onSuccess} />;
 }

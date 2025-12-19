@@ -28,8 +28,10 @@ A modern, full-stack dashboard for tracking competitive programming progress. Re
 ## Tech Stack
 
 - **Frontend**: React 19 + TypeScript + Vite
+- **Routing**: TanStack Router v1 (File-based routing)
 - **Styling**: TailwindCSS 4 + shadcn/ui components
-- **State Management**: React Context API
+- **State Management**: React Context API + TanStack Query (Server state)
+- **Data Fetching**: TanStack Query v5 (Caching, mutations, background sync)
 - **Data Table**: TanStack Table v8
 - **Local Storage**: Dexie.js (IndexedDB)
 - **Backend** (Optional): Supabase (PostgreSQL + Auth + RLS)
@@ -135,6 +137,39 @@ Others can visit your public profile to see:
 - Your full problem history (read-only)
 - Your profile display name
 
+## Data Management
+
+The application uses **TanStack Query** for efficient data fetching and caching:
+
+### Benefits
+- **Automatic Caching** - Reduces unnecessary database/network requests
+- **Background Refetching** - Keeps your data fresh without manual refreshes
+- **Optimistic Updates** - UI updates instantly while saving in the background
+- **Request Deduplication** - Multiple components can share the same data efficiently
+- **Built-in Loading & Error States** - Simplified state management
+
+### How It Works
+- **Local Mode**: Queries fetch from IndexedDB, mutations update local storage
+- **Cloud Mode**: Queries fetch from Supabase, mutations sync to cloud database
+- All data operations (add, edit, delete) automatically invalidate and refetch the cache
+- The `useProblems()` hook provides a unified interface for both storage modes
+
+## Routing
+
+The application uses TanStack Router with file-based routing:
+
+- `/` - Dashboard (main page with problem tracker)
+- `/auth?view=login` - Login page
+- `/auth?view=sign-up` - Sign up page
+- `/auth?view=forgot-password` - Password reset page
+- `/auth?view=update-password` - Update password page
+- `/:username` - Public profile page (e.g., `/john_doe`)
+
+Routes are automatically generated from the `src/routes/` directory. The router includes:
+- Type-safe navigation
+- Search parameter validation with Zod
+- Development tools (TanStack Router DevTools)
+
 ## Data Schema
 
 ### Problems Table
@@ -164,28 +199,33 @@ Others can visit your public profile to see:
 ```
 cptracker/
 ├── src/
-│   ├── components/          # React components
-│   │   ├── ui/             # shadcn/ui components
-│   │   ├── auth-page.tsx   # Authentication UI
+│   ├── routes/             # TanStack Router routes
+│   │   ├── __root.tsx     # Root layout with providers
+│   │   ├── index.tsx      # Dashboard page (/)
+│   │   ├── auth.tsx       # Authentication page (/auth)
+│   │   └── $username.tsx  # Public profile page (/:username)
+│   ├── components/         # React components
+│   │   ├── ui/            # shadcn/ui components
+│   │   ├── auth-page.tsx  # Authentication UI
 │   │   ├── problems-table.tsx
 │   │   ├── public-profile-view.tsx
 │   │   └── settings-sheet.tsx
-│   ├── contexts/           # React contexts
+│   ├── contexts/          # React contexts
 │   │   └── auth-context.tsx
-│   ├── hooks/              # Custom React hooks
-│   │   ├── use-problems-db.ts
+│   ├── hooks/             # Custom React hooks
+│   │   ├── use-problems-queries.ts  # TanStack Query hooks
 │   │   └── use-toast.ts
-│   ├── lib/                # Utility libraries
-│   │   ├── db.ts          # IndexedDB (Dexie)
+│   ├── lib/               # Utility libraries
+│   │   ├── db.ts         # IndexedDB (Dexie)
 │   │   ├── storage-mode.ts
-│   │   └── supabase/      # Supabase integration
+│   │   └── supabase/     # Supabase integration
 │   │       ├── client.ts
 │   │       ├── auth.ts
 │   │       ├── database.ts
 │   │       └── profiles.ts
-│   └── App.tsx            # Main app with routing
+│   └── main.tsx          # App entry point with QueryClientProvider + Router
 ├── supabase/
-│   └── schema.sql         # Database schema for Supabase
+│   └── schema.sql        # Database schema for Supabase
 └── package.json
 ```
 
@@ -225,6 +265,8 @@ AGPL-3.0 - see LICENSE file for details
 ## Acknowledgments
 
 - [shadcn/ui](https://ui.shadcn.com/) for the beautiful UI components
+- [TanStack Query](https://tanstack.com/query) for powerful data fetching and caching
 - [TanStack Table](https://tanstack.com/table) for the powerful data table
+- [TanStack Router](https://tanstack.com/router) for type-safe routing
 - [Supabase](https://supabase.com/) for the backend infrastructure
 - [Dexie.js](https://dexie.org/) for IndexedDB wrapper
