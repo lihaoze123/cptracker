@@ -53,7 +53,7 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 px-4 space-y-6">
-        <header className="flex items-start justify-between">
+        <header className="flex items-start justify-between select-none">
           <div className="space-y-2">
             <h1 className="text-2xl font-bold">Competitive Programming Tracker</h1>
             <p className="text-muted-foreground">
@@ -71,7 +71,7 @@ function Dashboard() {
           </div>
         </header>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 select-none">
           <ProblemCountHeatmap
             problems={filteredProblems}
             selectedYear={selectedYear}

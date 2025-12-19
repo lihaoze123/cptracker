@@ -139,7 +139,7 @@ export function ProblemCountHeatmap({
           />
         </div>
       </CardHeader>
-      <CardContent className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <CardContent className="overflow-x-auto">
         <Heatmap<DayProblemMeta>
           data={heatmapData}
           startDate={getYearStartDate(selectedYear)}
@@ -244,7 +244,7 @@ export function MaxDifficultyHeatmap({
           />
         </div>
       </CardHeader>
-      <CardContent className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <CardContent className="overflow-x-auto">
         <Heatmap<DayProblemMeta>
           data={heatmapData}
           startDate={getYearStartDate(selectedYear)}
