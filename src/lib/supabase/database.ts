@@ -47,9 +47,16 @@ export function toSupabaseData(problem: Omit<SolvedProblem, "id">) {
 
 export async function fetchAllProblems(): Promise<SupabaseProblem[]> {
   const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Not authenticated");
+
   const { data, error } = await supabase
     .from("problems")
     .select("*")
+    .eq("user_id", user.id)
     .order("日期", { ascending: false });
 
   if (error) throw error;
