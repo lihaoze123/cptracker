@@ -110,20 +110,18 @@ function Dashboard() {
                 Sign In
               </Button>
             )}
-            <div className="flex items-center gap-2 md:ml-0">
-              <OJImport onImport={importProblems} />
-              <CSVToolbar
-                problems={dbProblems}
-                onImport={importProblems}
-                onClearAll={clearAllProblems}
-                onReset={resetToMockData}
-              />
-              <SettingsSheet
-                onUploadToCloud={uploadLocalToCloud}
-                onDownloadFromCloud={downloadCloudToLocal}
-                isSyncing={isSyncing}
-              />
-            </div>
+            <OJImport onImport={importProblems} />
+            <CSVToolbar
+              problems={dbProblems}
+              onImport={importProblems}
+              onClearAll={clearAllProblems}
+              onReset={resetToMockData}
+            />
+            <SettingsSheet
+              onUploadToCloud={uploadLocalToCloud}
+              onDownloadFromCloud={downloadCloudToLocal}
+              isSyncing={isSyncing}
+            />
           </div>
         </header>
 

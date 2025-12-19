@@ -82,9 +82,9 @@ export function PublicProfileView({ username, onBack }: PublicProfileViewProps) 
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-8 px-4 space-y-6">
+      <div className="container mx-auto py-4 md:py-8 px-4 space-y-6">
         {/* Header */}
-        <header className="flex items-start justify-between select-none">
+        <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 select-none">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               {onBack && (
@@ -93,7 +93,7 @@ export function PublicProfileView({ username, onBack }: PublicProfileViewProps) 
                 </Button>
               )}
               <div>
-                <h1 className="text-2xl font-bold">
+                <h1 className="text-xl md:text-2xl font-bold">
                   {profile?.display_name || `@${username}`}
                 </h1>
                 <p className="text-muted-foreground">@{username}</p>
@@ -103,7 +103,7 @@ export function PublicProfileView({ username, onBack }: PublicProfileViewProps) 
               Public profile • {problems.length} problem{problems.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full md:w-auto">
             <Button
               variant="ghost"
               size="icon"
@@ -119,8 +119,8 @@ export function PublicProfileView({ username, onBack }: PublicProfileViewProps) 
                 <Github className="h-4 w-4" />
               </a>
             </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/" className="flex items-center gap-2">
+            <Button variant="outline" size="sm" asChild className="flex-1 md:flex-none">
+              <Link to="/" className="flex items-center justify-center gap-2">
                 <ExternalLink className="h-4 w-4" />
                 View My Tracker
               </Link>
