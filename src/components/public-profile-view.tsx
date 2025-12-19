@@ -151,6 +151,7 @@ export function PublicProfileView({ username, onBack }: PublicProfileViewProps) 
           onAddProblem={() => Promise.resolve(false)}
           onEditProblem={() => Promise.resolve(false)}
           readOnly
+          ownerUsername={username}
         />
       </div>
     </div>

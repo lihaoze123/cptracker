@@ -5,6 +5,7 @@ export interface SolvedProblem {
   题解: string;
   关键词: string;
   日期: string;
+  supabase_id?: string;
 }
 
 export const mockProblems: SolvedProblem[] = [

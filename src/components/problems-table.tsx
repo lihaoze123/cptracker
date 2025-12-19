@@ -21,6 +21,7 @@ interface ProblemsTableProps {
   onAddProblem?: (problem: Omit<SolvedProblem, "id">) => Promise<boolean>;
   onEditProblem?: (id: number, changes: Partial<SolvedProblem>) => Promise<boolean>;
   readOnly?: boolean;
+  ownerUsername?: string;
 }
 
 function formatDate(dateStr: string): string {
@@ -34,7 +35,14 @@ function formatDate(dateStr: string): string {
   });
 }
 
-export function ProblemsTable({ problems, onFilteredDataChange, onAddProblem, onEditProblem, readOnly = false }: ProblemsTableProps) {
+export function ProblemsTable({
+  problems,
+  onFilteredDataChange,
+  onAddProblem,
+  onEditProblem,
+  readOnly = false,
+  ownerUsername,
+}: ProblemsTableProps) {
   const [editingProblem, setEditingProblem] = useState<SolvedProblem | null>(null);
   const [editSheetOpen, setEditSheetOpen] = useState(false);
 
@@ -239,8 +247,14 @@ export function ProblemsTable({ problems, onFilteredDataChange, onAddProblem, on
         cell: ({ row }) => {
           const solution = row.getValue<string>("solution");
           const problemName = extractProblemInfo(row.original.题目).name;
+          const solutionId = row.original.supabase_id || String(row.original.id);
           return (
-            <SolutionDialog solution={solution} problemName={problemName} />
+            <SolutionDialog
+              solution={solution}
+              problemName={problemName}
+              solutionId={solutionId}
+              ownerUsername={ownerUsername}
+            />
           );
         },
         enableSorting: false,
@@ -307,8 +321,7 @@ export function ProblemsTable({ problems, onFilteredDataChange, onAddProblem, on
 
     return baseColumns;
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [readOnly]
+    [readOnly, ownerUsername]
   );
 
   const [sorting, setSorting] = useState<SortingState>([{ id: "date", desc: true }]);

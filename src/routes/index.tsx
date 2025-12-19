@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
+import { z } from "zod";
 import {
   ProblemCountHeatmap,
   MaxDifficultyHeatmap,
@@ -16,6 +17,9 @@ import { Button } from "@/components/ui/button";
 import { Cloud, RefreshCw, User, Github } from "lucide-react";
 
 export const Route = createFileRoute("/")({
+  validateSearch: z.object({
+    solution: z.string().optional(),
+  }),
   component: Dashboard,
 });
 

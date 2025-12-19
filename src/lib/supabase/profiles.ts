@@ -4,6 +4,7 @@
  */
 
 import { createClient } from "./client";
+import type { SupabaseProblem } from "./database";
 
 export interface UserProfile {
   id: string;
@@ -124,4 +125,43 @@ export async function getProblemsByUsername(username: string) {
 
   if (error) throw error;
   return { profile, problems: data ?? [] };
+}
+
+/**
+ * 根据 username 和题解 ID 获取单个题目（公开访问）
+ */
+export async function getPublicSolutionByUsername(
+  username: string,
+  solutionId: string
+): Promise<{ profile: UserProfile; problem: SupabaseProblem }> {
+  const supabase = createClient();
+  const profile = await getProfileByUsername(username);
+
+  if (!profile) {
+    throw new Error("User not found");
+  }
+
+  if (!profile.is_public) {
+    throw new Error("User profile is not public");
+  }
+
+  const { data, error } = await supabase
+    .from("problems")
+    .select("*")
+    .eq("id", solutionId)
+    .eq("user_id", profile.id)
+    .single();
+
+  if (error) {
+    if ((error as { code?: string }).code === "PGRST116") {
+      throw new Error("Solution not found");
+    }
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error("Solution not found");
+  }
+
+  return { profile, problem: data as SupabaseProblem };
 }

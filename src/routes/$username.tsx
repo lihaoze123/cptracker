@@ -1,7 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { z } from "zod";
 import { PublicProfileView } from "@/components/public-profile-view";
 
 export const Route = createFileRoute("/$username")({
+  validateSearch: z.object({
+    solution: z.string().optional(),
+  }),
   component: PublicProfileRoute,
 });
 
