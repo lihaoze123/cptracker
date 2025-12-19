@@ -96,28 +96,44 @@ export function CSVToolbar({ problems, onImport, onClearAll, onReset }: CSVToolb
         className="hidden"
       />
 
-      <Button variant="outline" size="sm" onClick={handleExport} disabled={problems.length === 0}>
-        <HugeiconsIcon icon={Download01Icon} data-icon="inline-start" />
-        导出 CSV
-      </Button>
+      <div className="hidden sm:flex items-center gap-2">
+        <Button variant="outline" size="sm" onClick={handleExport} disabled={problems.length === 0}>
+          <HugeiconsIcon icon={Download01Icon} data-icon="inline-start" />
+          导出 CSV
+        </Button>
 
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => fileInputRef.current?.click()}
-        disabled={isImporting}
-      >
-        <HugeiconsIcon icon={Upload01Icon} data-icon="inline-start" />
-        {isImporting ? "解析中..." : "导入 CSV"}
-      </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isImporting}
+        >
+          <HugeiconsIcon icon={Upload01Icon} data-icon="inline-start" />
+          {isImporting ? "解析中..." : "导入 CSV"}
+        </Button>
+      </div>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon-sm">
             <HugeiconsIcon icon={MoreVerticalIcon} />
+            <span className="sr-only">Menu</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem className="sm:hidden" onClick={handleExport} disabled={problems.length === 0}>
+            <HugeiconsIcon icon={Download01Icon} />
+            导出 CSV
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="sm:hidden"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isImporting}
+          >
+            <HugeiconsIcon icon={Upload01Icon} />
+            {isImporting ? "解析中..." : "导入 CSV"}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator className="sm:hidden" />
           <DropdownMenuItem onClick={() => generateCSVTemplate()}>
             <HugeiconsIcon icon={FileDownloadIcon} />
             下载 CSV 模板

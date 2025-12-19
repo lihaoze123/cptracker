@@ -71,24 +71,24 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-8 px-4 space-y-6">
-        <header className="flex items-start justify-between select-none">
+      <div className="container mx-auto py-4 md:py-8 px-4 space-y-6">
+        <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 select-none">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold">Competitive Programming Tracker</h1>
+              <h1 className="text-xl md:text-2xl font-bold">CP Tracker</h1>
               {isCloudMode && (
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <Cloud className="h-4 w-4" />
-                  <span>Cloud</span>
+                  <span className="hidden sm:inline">Cloud</span>
                   {isSyncing && <RefreshCw className="h-3 w-3 animate-spin" />}
                 </div>
               )}
             </div>
-            <p className="text-muted-foreground">
+            <p className="text-sm md:text-base text-muted-foreground">
               Track your problem-solving progress and performance
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
             <Button
               variant="ghost"
               size="icon"
@@ -110,18 +110,20 @@ function Dashboard() {
                 Sign In
               </Button>
             )}
-            <OJImport onImport={importProblems} />
-            <CSVToolbar
-              problems={dbProblems}
-              onImport={importProblems}
-              onClearAll={clearAllProblems}
-              onReset={resetToMockData}
-            />
-            <SettingsSheet
-              onUploadToCloud={uploadLocalToCloud}
-              onDownloadFromCloud={downloadCloudToLocal}
-              isSyncing={isSyncing}
-            />
+            <div className="flex items-center gap-2 ml-auto md:ml-0">
+              <OJImport onImport={importProblems} />
+              <CSVToolbar
+                problems={dbProblems}
+                onImport={importProblems}
+                onClearAll={clearAllProblems}
+                onReset={resetToMockData}
+              />
+              <SettingsSheet
+                onUploadToCloud={uploadLocalToCloud}
+                onDownloadFromCloud={downloadCloudToLocal}
+                isSyncing={isSyncing}
+              />
+            </div>
           </div>
         </header>
 
