@@ -30,7 +30,7 @@ export function DataTablePagination<TData>({
   return (
     <div
       className={cn(
-        "flex w-full flex-col-reverse items-center justify-between gap-4 overflow-auto p-1 sm:flex-row sm:gap-8",
+        "flex w-full flex-col items-center justify-between gap-4 overflow-auto p-1 sm:flex-row sm:gap-8",
         className,
       )}
       {...props}
@@ -38,9 +38,9 @@ export function DataTablePagination<TData>({
       <div className="flex-1 text-sm text-muted-foreground">
         {table.getFilteredRowModel().rows.length} problem(s)
       </div>
-      <div className="flex flex-col-reverse items-center gap-4 sm:flex-row sm:gap-6 lg:gap-8">
+      <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6 lg:gap-8">
         <div className="flex items-center space-x-2">
-          <p className="whitespace-nowrap font-medium text-sm">Rows per page</p>
+          <p className="hidden sm:block whitespace-nowrap font-medium text-sm">Rows per page</p>
           <Select
             value={`${table.getState().pagination.pageSize}`}
             onValueChange={(value) => {
@@ -68,7 +68,7 @@ export function DataTablePagination<TData>({
             aria-label="Go to first page"
             variant="outline"
             size="icon"
-            className="hidden size-8 lg:flex"
+            className="hidden size-10 sm:size-8 lg:flex"
             onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
           >
@@ -78,7 +78,7 @@ export function DataTablePagination<TData>({
             aria-label="Go to previous page"
             variant="outline"
             size="icon"
-            className="size-8"
+            className="size-10 sm:size-8"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
@@ -88,7 +88,7 @@ export function DataTablePagination<TData>({
             aria-label="Go to next page"
             variant="outline"
             size="icon"
-            className="size-8"
+            className="size-10 sm:size-8"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
@@ -98,7 +98,7 @@ export function DataTablePagination<TData>({
             aria-label="Go to last page"
             variant="outline"
             size="icon"
-            className="hidden size-8 lg:flex"
+            className="hidden size-10 sm:size-8 lg:flex"
             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
             disabled={!table.getCanNextPage()}
           >

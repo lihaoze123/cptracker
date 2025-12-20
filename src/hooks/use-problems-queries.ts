@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import {
   getAllProblems,
   addProblems as dbAddProblems,
@@ -42,15 +42,7 @@ export function useProblems() {
         return cloudProblems.map((p, idx) => toLocalProblem(p, idx + 1));
       } else {
         // Local mode: fetch from IndexedDB
-        const data = await getAllProblems();
-
-        // Initialize with mock data if empty
-        if (data.length === 0) {
-          await dbImportProblems(mockProblems, true);
-          return await getAllProblems();
-        }
-
-        return data;
+        return await getAllProblems();
       }
     },
   });
@@ -106,6 +98,28 @@ export function useProblems() {
         }
       } else {
         await dbDeleteProblem(id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: PROBLEMS_QUERY_KEY });
+    },
+  });
+
+  // Delete multiple problems mutation
+  const deleteProblemsMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      if (isCloudMode) {
+        const supabaseIds = ids
+          .map((id) => {
+            const problem = problems.find((p) => p.id === id) as SolvedProblem & {
+              supabase_id?: string;
+            };
+            return problem?.supabase_id;
+          })
+          .filter(Boolean) as string[];
+        await Promise.all(supabaseIds.map((id) => deleteProblemById(id)));
+      } else {
+        await Promise.all(ids.map((id) => dbDeleteProblem(id)));
       }
     },
     onSuccess: () => {
@@ -250,6 +264,19 @@ export function useProblems() {
     [deleteProblemMutation]
   );
 
+  const deleteProblems = useCallback(
+    async (ids: number[]) => {
+      try {
+        await deleteProblemsMutation.mutateAsync(ids);
+        return true;
+      } catch (err) {
+        console.error("Delete problems failed:", err);
+        return false;
+      }
+    },
+    [deleteProblemsMutation]
+  );
+
   const clearAllProblems = useCallback(async () => {
     try {
       await clearAllProblemsMutation.mutateAsync();
@@ -306,8 +333,23 @@ export function useProblems() {
   const isSyncing =
     uploadToCloudMutation.isPending || downloadFromCloudMutation.isPending;
 
+  // Extract all unique tags from problems for autocomplete
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    problems.forEach((p) => {
+      p.关键词.split(",").forEach((t) => {
+        const trimmed = t.trim();
+        if (trimmed) tagSet.add(trimmed);
+      });
+    });
+    return Array.from(tagSet).sort((a, b) =>
+      a.toLowerCase().localeCompare(b.toLowerCase())
+    );
+  }, [problems]);
+
   return {
     problems,
+    allTags,
     isLoading,
     isSyncing,
     error: error ? (error as Error).message : null,
@@ -315,6 +357,7 @@ export function useProblems() {
     addProblems,
     updateProblem,
     deleteProblem,
+    deleteProblems,
     clearAllProblems,
     importProblems,
     resetToMockData,

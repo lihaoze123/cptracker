@@ -1,7 +1,8 @@
-import { useMemo, useState, useEffect } from "react";
-import type { ColumnDef, SortingState, ColumnFiltersState, VisibilityState, Row } from "@tanstack/react-table";
+import { useMemo, useState, useEffect, useCallback } from "react";
+import type { ColumnDef, SortingState, ColumnFiltersState, VisibilityState, Row, RowSelectionState } from "@tanstack/react-table";
 import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, getFacetedRowModel, getFacetedUniqueValues } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { RatingBadge } from "@/components/rating-badge";
 import { SolutionDialog } from "@/components/solution-dialog";
 import { ProblemTextDialog } from "@/components/problem-text-dialog";
@@ -9,10 +10,13 @@ import type { SolvedProblem } from "@/data/mock";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar";
+import { DataTableEmptyState } from "@/components/data-table/data-table-empty-state";
+import { DataTableActionBar } from "@/components/data-table/data-table-action-bar";
 import { AddProblemSheet } from "@/components/add-problem-sheet";
 import { EditProblemSheet } from "@/components/edit-problem-sheet";
 import { Button } from "@/components/ui/button";
 import { Calendar, Hash, FileText, Link as LinkIcon, Tags, Star, Pencil } from "lucide-react";
+import { useProblems } from "@/hooks/use-problems-queries";
 import { extractURLFromText, extractProblemInfo } from "@/lib/problem-utils";
 
 interface ProblemsTableProps {
@@ -45,16 +49,58 @@ export function ProblemsTable({
 }: ProblemsTableProps) {
   const [editingProblem, setEditingProblem] = useState<SolvedProblem | null>(null);
   const [editSheetOpen, setEditSheetOpen] = useState(false);
+  const [addSheetOpen, setAddSheetOpen] = useState(false);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const { deleteProblems, resetToMockData } = useProblems();
 
   const handleEditClick = (problem: SolvedProblem) => {
     setEditingProblem(problem);
     setEditSheetOpen(true);
   };
 
+  const handleBulkDelete = useCallback(
+    async (rows: SolvedProblem[]) => {
+      const ids = rows.map((row) => row.id);
+      await deleteProblems(ids);
+    },
+    [deleteProblems]
+  );
+
   const columns = useMemo<ColumnDef<SolvedProblem>[]>(
     () => {
-      const baseColumns: ColumnDef<SolvedProblem>[] = [
-      {
+      const baseColumns: ColumnDef<SolvedProblem>[] = [];
+
+      // Add select column only if not in read-only mode
+      if (!readOnly) {
+        baseColumns.push({
+          id: "select",
+          header: ({ table }) => (
+            <Checkbox
+              checked={
+                table.getIsAllPageRowsSelected() ||
+                (table.getIsSomePageRowsSelected() && "indeterminate")
+              }
+              onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+              aria-label="Select all"
+              className="translate-y-0.5"
+            />
+          ),
+          cell: ({ row }) => (
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(value) => row.toggleSelected(!!value)}
+              aria-label="Select row"
+              className="translate-y-0.5"
+            />
+          ),
+          size: 40,
+          enableSorting: false,
+          enableColumnFilter: false,
+          enableHiding: false,
+        });
+      }
+
+      baseColumns.push({
         id: "source",
         accessorFn: (row) => extractProblemInfo(row.题目).source,
         header: ({ column }) => (
@@ -294,8 +340,7 @@ export function ProblemsTable({
         },
         enableColumnFilter: true,
         enableSorting: true,
-      },
-    ];
+      });
 
     // Add actions column only if not in read-only mode
     if (!readOnly) {
@@ -307,10 +352,10 @@ export function ProblemsTable({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            className="size-9 sm:size-7 text-muted-foreground hover:text-foreground"
             onClick={() => handleEditClick(row.original)}
           >
-            <Pencil className="h-3.5 w-3.5" />
+            <Pencil className="size-4 sm:size-3.5" />
             <span className="sr-only">Edit</span>
           </Button>
         ),
@@ -335,7 +380,10 @@ export function ProblemsTable({
       sorting,
       columnFilters,
       columnVisibility,
+      rowSelection,
     },
+    enableRowSelection: !readOnly,
+    onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
@@ -361,11 +409,42 @@ export function ProblemsTable({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columnFilters, sorting, problems]);
 
+  const isFiltered = columnFilters.length > 0;
+
+  const handleResetFilters = () => {
+    setColumnFilters([]);
+  };
+
+  const handleOpenAddSheet = () => {
+    setAddSheetOpen(true);
+  };
+
   return (
     <>
-      <DataTable table={table}>
+      <DataTable
+        table={table}
+        emptyState={
+          <DataTableEmptyState
+            isFiltered={isFiltered}
+            onReset={handleResetFilters}
+            onAdd={!readOnly && onAddProblem ? handleOpenAddSheet : undefined}
+            onLoadSample={!readOnly ? resetToMockData : undefined}
+          />
+        }
+        actionBar={
+          !readOnly && (
+            <DataTableActionBar table={table} onDelete={handleBulkDelete} />
+          )
+        }
+      >
         <DataTableToolbar table={table}>
-          {!readOnly && onAddProblem && <AddProblemSheet onAdd={onAddProblem} />}
+          {!readOnly && onAddProblem && (
+            <AddProblemSheet
+              onAdd={onAddProblem}
+              open={addSheetOpen}
+              onOpenChange={setAddSheetOpen}
+            />
+          )}
         </DataTableToolbar>
       </DataTable>
       {!readOnly && onEditProblem && (

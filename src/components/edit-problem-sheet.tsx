@@ -1,8 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { TagsInput } from "@/components/tags-input";
+import { useProblems } from "@/hooks/use-problems-queries";
+import { extractProblemInfo } from "@/lib/problem-utils";
 import {
   Sheet,
   SheetClose,
@@ -36,6 +39,15 @@ export function EditProblemSheet({
     日期: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const { allTags } = useProblems();
+
+  // 自动解析链接，显示预览
+  const parsedProblem = useMemo(() => {
+    const text = formData.题目.trim();
+    if (!text) return null;
+    const info = extractProblemInfo(text);
+    return info.isURL ? info : null;
+  }, [formData.题目]);
 
   // 当 problem 变化或 Sheet 打开时更新表单数据
   useEffect(() => {
@@ -132,6 +144,11 @@ export function EditProblemSheet({
               value={formData.题目}
               onChange={(e) => handleChange("题目", e.target.value)}
             />
+            {parsedProblem && (
+              <p className="text-xs text-muted-foreground">
+                {parsedProblem.source}: <span className="font-medium text-foreground">{parsedProblem.name}</span>
+              </p>
+            )}
             {errors.题目 && (
               <p className="text-xs text-destructive">{errors.题目}</p>
             )}
@@ -165,13 +182,11 @@ export function EditProblemSheet({
 
           <div className="grid gap-2">
             <Label htmlFor="edit-tags">Tags</Label>
-            <Textarea
-              id="edit-tags"
-              placeholder="DP, 贪心, 二分 (支持逗号/空格分隔)"
+            <TagsInput
               value={formData.关键词}
-              onChange={(e) => handleChange("关键词", e.target.value)}
-              className="resize-none"
-              rows={2}
+              onChange={(value) => handleChange("关键词", value)}
+              suggestions={allTags}
+              placeholder="Add tags..."
             />
           </div>
 
