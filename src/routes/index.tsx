@@ -6,6 +6,7 @@ import {
   MaxDifficultyHeatmap,
   getAvailableYears,
 } from "@/components/problem-heatmaps";
+import { ProblemChartsSection } from "@/components/problem-charts";
 import { ProblemsTable } from "@/components/problems-table";
 import { CSVToolbar } from "@/components/csv-toolbar";
 import { OJImport } from "@/components/oj-import";
@@ -129,6 +130,8 @@ function Dashboard() {
         </header>
 
         <OverviewStats problems={dbProblems} isLoading={isLoading} />
+
+        <ProblemChartsSection problems={dbProblems} isLoading={isLoading} />
 
         <div className="grid gap-6 md:grid-cols-2 select-none">
           <ProblemCountHeatmap

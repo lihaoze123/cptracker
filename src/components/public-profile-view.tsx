@@ -6,6 +6,7 @@ import {
   MaxDifficultyHeatmap,
   getAvailableYears,
 } from "@/components/problem-heatmaps";
+import { ProblemChartsSection } from "@/components/problem-charts";
 import { OverviewStats } from "@/components/overview-stats";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
@@ -132,6 +133,8 @@ export function PublicProfileView({ username, onBack }: PublicProfileViewProps) 
         </header>
 
         <OverviewStats problems={problems} isLoading={isLoading} />
+
+        <ProblemChartsSection problems={problems} isLoading={isLoading} />
 
         {/* Heatmaps */}
         <div className="grid gap-6 md:grid-cols-2 select-none">

@@ -169,7 +169,7 @@ export function ProblemCountHeatmap({
   );
 }
 
-function getDifficultyLevel(rating: number): number {
+export function getDifficultyLevel(rating: number): number {
   if (rating < 1200) return 1;
   if (rating < 1400) return 2;
   if (rating < 1600) return 3;
@@ -180,7 +180,7 @@ function getDifficultyLevel(rating: number): number {
 }
 
 // Difficulty color palette
-const DIFFICULTY_COLORS = [
+export const DIFFICULTY_COLORS = [
   "#9ca3af", // 1: gray (<1200)
   "#22c55e", // 2: green (1200-1399)
   "#06b6d4", // 3: cyan (1400-1599)
@@ -190,7 +190,7 @@ const DIFFICULTY_COLORS = [
   "#ef4444", // 7: red (2400+)
 ];
 
-const DIFFICULTY_LABELS = [
+export const DIFFICULTY_LABELS = [
   "<1200",
   "1200-1399",
   "1400-1599",

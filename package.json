@@ -37,6 +37,7 @@
     "react-dom": "^19.2.0",
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^16.1.0",
+    "recharts": "^2.15.4",
     "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
