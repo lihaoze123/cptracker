@@ -37,12 +37,14 @@ import {
   Upload,
   Download,
   LogOut,
-  CheckCircle2,
   Info,
   Globe,
   Copy,
   Check,
+  ExternalLink,
 } from "lucide-react";
+import { UserAvatar } from "@/components/user-avatar";
+import { getEmailHash } from "@/lib/gravatar";
 import { useAuth } from "@/contexts/auth-context";
 import type { StorageMode } from "@/lib/storage-mode";
 import { fetchAllProblems } from "@/lib/supabase/database";
@@ -208,12 +210,14 @@ export function SettingsSheet({
         }
       }
 
-      // 更新资料
+      // 更新资料（包括 avatar_hash）
       const trimmedDisplayName = editedDisplayName.trim();
+      const avatarHash = user?.email ? getEmailHash(user.email) : undefined;
       const updatedProfile = await updateProfile({
         username: trimmedUsername,
         display_name: trimmedDisplayName || undefined,
         is_public: editedIsPublic,
+        avatar_hash: avatarHash,
       });
 
       setProfile(updatedProfile);
@@ -265,7 +269,7 @@ export function SettingsSheet({
             Settings
           </Button>
         </SheetTrigger>
-        <SheetContent className="w-[400px] sm:w-[540px] px-2 flex flex-col">
+        <SheetContent className="w-[400px] sm:w-[540px] px-6 flex flex-col">
           <SheetHeader className="flex-shrink-0">
             <SheetTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
@@ -343,23 +347,44 @@ export function SettingsSheet({
                   <Label className="text-base font-semibold">Account</Label>
                   <div className="rounded-lg border bg-card p-4 space-y-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                        <CheckCircle2 className="h-5 w-5 text-primary" />
-                      </div>
+                      <UserAvatar email={user.email} size={40} />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{user.email}</p>
                         <p className="text-xs text-muted-foreground">Signed in</p>
                       </div>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleSignOut}
-                      className="w-full"
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Sign Out
-                    </Button>
+                    <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-3">
+                      <Info className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Your avatar is linked to your email via Gravatar. Set up your avatar at gravatar.com.
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        asChild
+                      >
+                        <a
+                          href="https://gravatar.com"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Set up Gravatar
+                        </a>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSignOut}
+                        className="flex-1"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Sign Out
+                      </Button>
+                    </div>
                   </div>
                 </div>
                 <Separator />

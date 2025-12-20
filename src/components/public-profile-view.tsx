@@ -6,7 +6,9 @@ import {
   MaxDifficultyHeatmap,
   getAvailableYears,
 } from "@/components/problem-heatmaps";
+import { OverviewStats } from "@/components/overview-stats";
 import { Button } from "@/components/ui/button";
+import { UserAvatar } from "@/components/user-avatar";
 import { ArrowLeft, ExternalLink, Github } from "lucide-react";
 import type { SolvedProblem } from "@/data/mock";
 import { getProblemsByUsername, type UserProfile } from "@/lib/supabase/profiles";
@@ -92,6 +94,7 @@ export function PublicProfileView({ username, onBack }: PublicProfileViewProps) 
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
               )}
+              <UserAvatar hash={profile?.avatar_hash} size={48} />
               <div>
                 <h1 className="text-xl md:text-2xl font-bold">
                   {profile?.display_name || `@${username}`}
@@ -127,6 +130,8 @@ export function PublicProfileView({ username, onBack }: PublicProfileViewProps) 
             </Button>
           </div>
         </header>
+
+        <OverviewStats problems={problems} isLoading={isLoading} />
 
         {/* Heatmaps */}
         <div className="grid gap-6 md:grid-cols-2 select-none">

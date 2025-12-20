@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   username TEXT UNIQUE NOT NULL,
   display_name TEXT,
   is_public BOOLEAN DEFAULT false,
+  avatar_hash TEXT,  -- SHA-256 hash of email for Gravatar
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );

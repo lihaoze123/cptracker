@@ -10,11 +10,14 @@ import { ProblemsTable } from "@/components/problems-table";
 import { CSVToolbar } from "@/components/csv-toolbar";
 import { OJImport } from "@/components/oj-import";
 import { SettingsSheet } from "@/components/settings-sheet";
+import { OverviewStats } from "@/components/overview-stats";
+import { StorageModeBadge } from "@/components/storage-mode-badge";
 import { useProblems } from "@/hooks/use-problems-queries";
 import { useAuth } from "@/contexts/auth-context";
 import type { SolvedProblem } from "@/data/mock";
 import { Button } from "@/components/ui/button";
-import { Cloud, RefreshCw, User, Github } from "lucide-react";
+import { UserAvatar } from "@/components/user-avatar";
+import { User, Github } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   validateSearch: z.object({
@@ -80,13 +83,7 @@ function Dashboard() {
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <h1 className="text-xl md:text-2xl font-bold">CP Tracker</h1>
-              {isCloudMode && (
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Cloud className="h-4 w-4" />
-                  <span className="hidden sm:inline">Cloud</span>
-                  {isSyncing && <RefreshCw className="h-3 w-3 animate-spin" />}
-                </div>
-              )}
+              <StorageModeBadge isCloudMode={isCloudMode} isSyncing={isSyncing} />
             </div>
             <p className="text-sm md:text-base text-muted-foreground">
               Track your problem-solving progress and performance
@@ -108,7 +105,9 @@ function Dashboard() {
                 <Github className="h-4 w-4" />
               </a>
             </Button>
-            {!user && (
+            {user ? (
+              <UserAvatar email={user.email} size={32} className="cursor-pointer" />
+            ) : (
               <Button variant="outline" size="sm" onClick={handleNavigateToAuth}>
                 <User className="h-4 w-4 mr-2" />
                 Sign In
@@ -128,6 +127,8 @@ function Dashboard() {
             />
           </div>
         </header>
+
+        <OverviewStats problems={dbProblems} isLoading={isLoading} />
 
         <div className="grid gap-6 md:grid-cols-2 select-none">
           <ProblemCountHeatmap

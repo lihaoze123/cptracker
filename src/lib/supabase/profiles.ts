@@ -11,6 +11,7 @@ export interface UserProfile {
   username: string;
   display_name: string | null;
   is_public: boolean;
+  avatar_hash: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -66,6 +67,7 @@ export async function updateProfile(updates: {
   username?: string;
   display_name?: string;
   is_public?: boolean;
+  avatar_hash?: string;
 }): Promise<UserProfile> {
   const supabase = createClient();
   const {
