@@ -1,14 +1,17 @@
 # CPTracker
 
-A modern, full-stack dashboard for tracking competitive programming progress. Record solved problems, visualize your activity with heatmaps, organize solutions with Markdown and LaTeX support, and optionally sync your data to the cloud with multi-device access.
+A modern, full-stack dashboard for tracking competitive programming progress. Record solved problems, visualize your activity with interactive charts and heatmaps, organize solutions with Markdown and LaTeX support, and optionally sync your data to the cloud with multi-device access.
 
 ## Features
 
 ### Core Features
 - **Problem Tracking** - Log problems with URL, difficulty rating, solution notes, and tags
+- **Interactive Statistics** - Visualize your progress with dynamic charts showing problems solved by difficulty, platform distribution, and daily activity trends
 - **Activity Heatmaps** - Visualize daily problem count and max difficulty over time
-- **Advanced Data Table** - Filter by source/tags/difficulty/date, sort, and search through your problem history
+- **Overview Dashboard** - Get instant insights with key statistics, recent activity, and performance trends
+- **Advanced Data Table** - Filter by source/tags/difficulty/date, sort, and search through your problem history with bulk operations support
 - **Rich Text Solutions** - Write solutions with Markdown, LaTeX math, and syntax-highlighted code blocks
+- **Public Solution Links** - Share individual solutions via unique public URLs
 - **CSV Import/Export** - Backup and restore your data easily
 - **OJ Import** - Import problems directly from Codeforces, AtCoder, and other OJ platforms
 
@@ -24,6 +27,7 @@ A modern, full-stack dashboard for tracking competitive programming progress. Re
 - **Privacy Control** - Toggle between public and private profile visibility
 - **Read-only Sharing** - Share your profile at `yoursite.com/{username}` for others to view
 - **Profile Customization** - Set display name and manage public visibility
+- **Individual Solution Sharing** - Share specific solutions with unique public links
 
 ## Tech Stack
 
@@ -36,7 +40,10 @@ A modern, full-stack dashboard for tracking competitive programming progress. Re
 - **Local Storage**: Dexie.js (IndexedDB)
 - **Backend** (Optional): Supabase (PostgreSQL + Auth + RLS)
 - **Math Rendering**: KaTeX
-- **Markdown**: react-markdown
+- **Markdown**: react-markdown with syntax highlighting
+- **Charts**: Recharts for interactive data visualization
+- **Icons**: Lucide React & HugeIcons
+- **Date Handling**: date-fns & react-day-picker
 
 ## Getting Started
 
@@ -235,18 +242,54 @@ cptracker/
 # Run development server
 npm run dev
 
-# Type checking
-npm run tsc
+# Generate router routes (required after route changes)
+npm run generate
+
+# Type checking (without emitting files)
+tsc -b
 
 # Lint
 npm run lint
 
-# Build
+# Build for production
 npm run build
 
 # Preview production build
 npm run preview
 ```
+
+### Development Workflow
+
+1. After modifying any route files in `src/routes/`, always run `npm run generate` to update the route tree
+2. The project uses TypeScript strict mode - ensure all types are properly defined
+3. The build process automatically generates routes, type-checks, and creates the production bundle
+
+### Project Structure & Important Patterns
+
+#### Storage Mode Abstraction
+The application uses a dual storage system with a unified interface:
+
+```typescript
+// Always use this hook - never import db.ts or supabase/database.ts directly
+import { useProblems } from "@/hooks/use-problems-queries";
+
+// The hook automatically handles storage mode switching
+const { data: problems, addProblem, updateProblem } = useProblems();
+```
+
+#### Route Management
+- Routes are defined in `src/routes/` using file-based routing
+- The route tree (`src/routeTree.gen.ts`) is auto-generated - never edit manually
+- All routes inherit from the root layout (`__root.tsx`) which provides:
+  - AuthContext for authentication state
+  - NuqsAdapter for URL search params
+  - TanStack Query client
+  - Toast notifications
+
+#### Component Architecture
+- UI components use shadcn/ui patterns with class-variance-authority
+- All components are mobile-first with Tailwind responsive breakpoints
+- State management follows React patterns with proper memoization where needed
 
 ## Contributing
 
