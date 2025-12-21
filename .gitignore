@@ -26,3 +26,6 @@ routeTree.gen.ts
 *.sln
 *.sw?
 CLAUDE.md
+
+# Local Netlify folder
+.netlify
