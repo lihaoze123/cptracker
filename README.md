@@ -1,19 +1,24 @@
 # CPTracker
 
-A modern, full-stack dashboard for tracking competitive programming progress. Record solved problems, visualize your activity with interactive charts and heatmaps, organize solutions with Markdown and LaTeX support, and optionally sync your data to the cloud with multi-device access.
+[![Github Stars](https://img.shields.io/github/stars/lihaoze123/cptracker)](https://github.com/lihaoze123/cptracker)
+[![GitHub Release](https://img.shields.io/github/v/release/lihaoze123/cptracker)](https://github.com/lihaoze123/cptracker/releases/latest)
+[![GitHub last commit (dev branch)](<https://img.shields.io/github/last-commit/lihaoze123/cptracker/main?label=last%20commit%20(main%20branch)>)](https://github.com/lihaoze123/cptracker/commits/main/)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/lihaoze123/cptracker)
+
+A modern, full-stack dashboard for tracking competitive programming progress. Record solved problems, visualize your activity with interactive charts and heatmaps, organize solutions with Markdown and LaTeX support, import directly from popular OJ platforms, and optionally sync your data to the cloud with multi-device access.
 
 ## Features
 
 ### Core Features
 - **Problem Tracking** - Log problems with URL, difficulty rating, solution notes, and tags
 - **Interactive Statistics** - Visualize your progress with dynamic charts showing problems solved by difficulty, platform distribution, and daily activity trends
-- **Activity Heatmaps** - Visualize daily problem count and max difficulty over time
+- **Activity Heatmaps** - Visualize daily problem count and max difficulty over time with year-by-year breakdown
 - **Overview Dashboard** - Get instant insights with key statistics, recent activity, and performance trends
 - **Advanced Data Table** - Filter by source/tags/difficulty/date, sort, and search through your problem history with bulk operations support
 - **Rich Text Solutions** - Write solutions with Markdown, LaTeX math, and syntax-highlighted code blocks
-- **Public Solution Links** - Share individual solutions via unique public URLs
+- **Public Solution Sharing** - Share individual solutions via unique public URLs with route-based sharing (`/:username/solutions/:solutionId`)
 - **CSV Import/Export** - Backup and restore your data easily
-- **OJ Import** - Import problems directly from Codeforces, AtCoder, and other OJ platforms
+- **OJ Import** - Import problems directly from Codeforces, AtCoder, Luogu (洛谷), and other OJ platforms with automatic difficulty conversion
 
 ### Cloud Sync & Authentication (Optional)
 - **Dual Storage Mode** - Choose between local-only (IndexedDB) or cloud sync (Supabase)
@@ -28,11 +33,12 @@ A modern, full-stack dashboard for tracking competitive programming progress. Re
 - **Read-only Sharing** - Share your profile at `yoursite.com/{username}` for others to view
 - **Profile Customization** - Set display name and manage public visibility
 - **Individual Solution Sharing** - Share specific solutions with unique public links
+- **Solution URL Routing** - Direct links to solutions with clean URLs (`/:username/solutions/:solutionId`)
 
 ## Tech Stack
 
 - **Frontend**: React 19 + TypeScript + Vite
-- **Routing**: TanStack Router v1 (File-based routing)
+- **Routing**: TanStack Router v1 (File-based routing with route generation)
 - **Styling**: TailwindCSS 4 + shadcn/ui components
 - **State Management**: React Context API + TanStack Query (Server state)
 - **Data Fetching**: TanStack Query v5 (Caching, mutations, background sync)
@@ -44,6 +50,9 @@ A modern, full-stack dashboard for tracking competitive programming progress. Re
 - **Charts**: Recharts for interactive data visualization
 - **Icons**: Lucide React & HugeIcons
 - **Date Handling**: date-fns & react-day-picker
+- **Deployment**: Netlify (with serverless functions for Luogu proxy)
+- **CSV Processing**: Papa Parse
+- **URL Search Params**: nuqs for type-safe URL state
 
 ## Getting Started
 
@@ -115,6 +124,20 @@ This will create:
 - Access from any device
 - Manual upload/download operations available
 
+### OJ Import Feature
+
+Import your solved problems directly from popular online judges:
+
+1. **Codeforces**: Import using your handle
+2. **AtCoder**: Import using your username
+3. **Luogu (洛谷)**: Import using UID and Client ID (requires API credentials)
+
+Features:
+- Automatic difficulty conversion between different rating systems
+- Bulk import with optional data merging
+- Configurable import options (clear existing data or merge)
+- Proxy support for CORS-restricted platforms (Luogu uses Netlify functions)
+
 ### Switching Between Modes
 
 1. Open **Settings** panel
@@ -171,11 +194,13 @@ The application uses TanStack Router with file-based routing:
 - `/auth?view=forgot-password` - Password reset page
 - `/auth?view=update-password` - Update password page
 - `/:username` - Public profile page (e.g., `/john_doe`)
+- `/:username/solutions/:solutionId` - Shared solution page (redirects to profile with solution modal)
 
 Routes are automatically generated from the `src/routes/` directory. The router includes:
 - Type-safe navigation
 - Search parameter validation with Zod
 - Development tools (TanStack Router DevTools)
+- Route-based solution sharing with redirect handling
 
 ## Data Schema
 
@@ -185,10 +210,29 @@ Routes are automatically generated from the `src/routes/` directory. The router 
 |-------|------|-------------|
 | id | number/UUID | Unique identifier |
 | 题目 | string | Problem URL or text |
-| 难度 | string | Difficulty rating (e.g., 1000-3500 for Codeforces) |
+| 难度 | string | Difficulty rating with fine granularity (supports Codeforces, AtCoder, Luogu ratings) |
 | 题解 | string | Solution notes (supports Markdown/LaTeX) |
 | 关键词 | string | Comma-separated tags (e.g., "dp, greedy, favorited") |
 | 日期 | string | ISO datetime when problem was solved |
+
+### Difficulty Rating System
+
+The application supports multiple difficulty rating systems with automatic conversion:
+
+- **Codeforces**: 800-3500+ rating scale
+- **AtCoder**: 0-4000+ rating scale (converted to Codeforces equivalent)
+- **Luogu (洛谷)**: 8-10 difficulty levels (converted to Codeforces equivalent)
+- **Custom**: Any numeric difficulty value
+
+Rating colors follow Codeforces conventions:
+- Gray: < 1200
+- Green: 1200-1399
+- Cyan: 1400-1599
+- Blue: 1600-1899
+- Purple: 1900-2099
+- Orange: 2100-2399
+- Red: 2400-2599
+- Dark Red: 2600+
 
 ### Profiles Table
 
@@ -210,13 +254,21 @@ cptracker/
 │   │   ├── __root.tsx     # Root layout with providers
 │   │   ├── index.tsx      # Dashboard page (/)
 │   │   ├── auth.tsx       # Authentication page (/auth)
-│   │   └── $username.tsx  # Public profile page (/:username)
+│   │   ├── $username.tsx  # Public profile page (/:username)
+│   │   └── $username/     # Nested routes
+│   │       └── solutions/
+│   │           └── $solutionId.tsx  # Solution sharing route
 │   ├── components/         # React components
 │   │   ├── ui/            # shadcn/ui components
 │   │   ├── auth-page.tsx  # Authentication UI
 │   │   ├── problems-table.tsx
 │   │   ├── public-profile-view.tsx
-│   │   └── settings-sheet.tsx
+│   │   ├── settings-sheet.tsx
+│   │   ├── oj-import.tsx  # OJ import functionality
+│   │   ├── problem-heatmaps.tsx  # Activity heatmaps
+│   │   ├── rating-badge.tsx     # Difficulty rating display
+│   │   ├── solution-dialog.tsx  # Solution view/share dialog
+│   │   └── tags-input.tsx      # Tag input component
 │   ├── contexts/          # React contexts
 │   │   └── auth-context.tsx
 │   ├── hooks/             # Custom React hooks
@@ -225,14 +277,24 @@ cptracker/
 │   ├── lib/               # Utility libraries
 │   │   ├── db.ts         # IndexedDB (Dexie)
 │   │   ├── storage-mode.ts
+│   │   ├── fetchOJs.ts   # OJ platform integration
+│   │   ├── csv.ts        # CSV import/export
+│   │   ├── problem-utils.ts  # Problem utilities
 │   │   └── supabase/     # Supabase integration
 │   │       ├── client.ts
 │   │       ├── auth.ts
 │   │       ├── database.ts
 │   │       └── profiles.ts
+│   ├── data/              # Type definitions and mock data
+│   │   └── mock.ts
 │   └── main.tsx          # App entry point with QueryClientProvider + Router
 ├── supabase/
 │   └── schema.sql        # Database schema for Supabase
+├── netlify/              # Netlify configuration
+│   └── functions/
+│       └── luogu-proxy.ts  # Proxy for Luogu API
+├── netlify.toml          # Netlify deployment config
+├── CLAUDE.md             # Development guide for Claude Code
 └── package.json
 ```
 
@@ -251,12 +313,23 @@ tsc -b
 # Lint
 npm run lint
 
-# Build for production
+# Build for production (includes route generation)
 npm run build
 
 # Preview production build
 npm run preview
 ```
+
+### Important Development Notes
+
+1. **Route Generation**: Always run `npm run generate` after modifying any route files in `src/routes/`. The route tree (`src/routeTree.gen.ts`) is auto-generated and should never be edited manually.
+
+2. **Build Process**: The build command automatically:
+   - Generates the route tree
+   - Runs TypeScript type checking
+   - Creates the production bundle
+
+3. **Storage Mode**: The app uses a dual storage system. Always use the `useProblems()` hook - never import `db.ts` or `supabase/database.ts` directly in components.
 
 ### Development Workflow
 
@@ -291,6 +364,31 @@ const { data: problems, addProblem, updateProblem } = useProblems();
 - All components are mobile-first with Tailwind responsive breakpoints
 - State management follows React patterns with proper memoization where needed
 
+## Deployment
+
+### Netlify Deployment
+
+The project includes Netlify configuration for easy deployment:
+
+1. **Automatic Deployment**: Connect your repository to Netlify for automatic deployments on push to main branch
+2. **Serverless Functions**: The project uses Netlify Functions for the Luogu API proxy to handle CORS issues
+3. **Environment Variables**: Set the following in Netlify dashboard:
+   - `VITE_SUPABASE_URL`: Your Supabase project URL
+   - `VITE_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+
+### Local Deployment
+
+For local deployment without Netlify:
+
+```bash
+# Build for production
+npm run build
+
+# Serve the dist folder with any static server
+npm install -g serve
+serve -s dist
+```
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit issues and pull requests.
@@ -300,6 +398,14 @@ Contributions are welcome! Please feel free to submit issues and pull requests.
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+### Development Guidelines
+
+- Follow the existing code style and patterns
+- Always use the `useProblems()` hook for data operations
+- Run `npm run generate` after modifying routes
+- Ensure TypeScript passes without errors
+- Test both local and cloud storage modes when applicable
 
 ## License
 
