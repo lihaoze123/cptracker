@@ -19,10 +19,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { CloudDownloadIcon } from "@hugeicons/core-free-icons";
-import { fetchCodeforces, fetchAtCoder } from "@/lib/fetchOJs";
+import { fetchCodeforces, fetchAtCoder, fetchLuogu } from "@/lib/fetchOJs";
 import type { SolvedProblem } from "@/data/mock";
 
-type OJType = "codeforces" | "atcoder";
+type OJType = "codeforces" | "atcoder" | "luogu";
 
 interface OJImportProps {
   onImport: (problems: Omit<SolvedProblem, "id">[], clearExisting: boolean) => Promise<boolean>;
@@ -32,6 +32,12 @@ export function OJImport({ onImport }: OJImportProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOJ, setSelectedOJ] = useState<OJType>("codeforces");
   const [handle, setHandle] = useState("");
+  const [luoguUid, setLuoguUid] = useState(
+    typeof window !== "undefined" ? window.localStorage.getItem("luogu_uid") ?? "" : ""
+  );
+  const [luoguClientId, setLuoguClientId] = useState(
+    typeof window !== "undefined" ? window.localStorage.getItem("luogu_client_id") ?? "" : ""
+  );
   const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [fetchedProblems, setFetchedProblems] = useState<SolvedProblem[] | null>(null);
@@ -43,6 +49,15 @@ export function OJImport({ onImport }: OJImportProps) {
       return;
     }
 
+    if (selectedOJ === "luogu") {
+      if (!luoguUid.trim() || !luoguClientId.trim()) {
+        setFetchError("请先填写 _uid 和 __client_id");
+        return;
+      }
+      window.localStorage.setItem("luogu_uid", luoguUid.trim());
+      window.localStorage.setItem("luogu_client_id", luoguClientId.trim());
+    }
+
     setIsFetching(true);
     setFetchError(null);
     setFetchedProblems(null);
@@ -50,7 +65,9 @@ export function OJImport({ onImport }: OJImportProps) {
     try {
       const problems = selectedOJ === "codeforces"
         ? await fetchCodeforces(handle.trim())
-        : await fetchAtCoder(handle.trim());
+        : selectedOJ === "atcoder"
+          ? await fetchAtCoder(handle.trim())
+          : await fetchLuogu(handle.trim());
 
       setFetchedProblems(problems);
     } catch (err) {
@@ -81,6 +98,7 @@ export function OJImport({ onImport }: OJImportProps) {
   const ojNames: Record<OJType, string> = {
     codeforces: "Codeforces",
     atcoder: "AtCoder",
+    luogu: "洛谷",
   };
 
   return (
@@ -116,6 +134,7 @@ export function OJImport({ onImport }: OJImportProps) {
                 <SelectContent>
                   <SelectItem value="codeforces">Codeforces</SelectItem>
                   <SelectItem value="atcoder">AtCoder</SelectItem>
+                  <SelectItem value="luogu">洛谷</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -131,12 +150,47 @@ export function OJImport({ onImport }: OJImportProps) {
                 />
                 <Button
                   onClick={handleFetch}
-                  disabled={isFetching || !handle.trim()}
+                  disabled={
+                    isFetching ||
+                    !handle.trim() ||
+                    (selectedOJ === "luogu" && (!luoguUid.trim() || !luoguClientId.trim()))
+                  }
                 >
                   {isFetching ? "获取中..." : "获取"}
                 </Button>
               </div>
             </div>
+
+            {selectedOJ === "luogu" && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">洛谷 Cookie（必填）</label>
+                <div className="grid gap-2 md:grid-cols-2">
+                  <Input
+                    placeholder="_uid"
+                    value={luoguUid}
+                    onChange={(e) => setLuoguUid(e.target.value)}
+                    onBlur={(e) => {
+                      const v = e.target.value.trim();
+                      if (v) window.localStorage.setItem("luogu_uid", v);
+                      else window.localStorage.removeItem("luogu_uid");
+                    }}
+                  />
+                  <Input
+                    placeholder="__client_id"
+                    value={luoguClientId}
+                    onChange={(e) => setLuoguClientId(e.target.value)}
+                    onBlur={(e) => {
+                      const v = e.target.value.trim();
+                      if (v) window.localStorage.setItem("luogu_client_id", v);
+                      else window.localStorage.removeItem("luogu_client_id");
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  仅需两个字段：_uid 与 __client_id，会保存在本地 localStorage 并用于请求洛谷。
+                </p>
+              </div>
+            )}
 
             {fetchError && (
               <div className="text-sm text-destructive">{fetchError}</div>

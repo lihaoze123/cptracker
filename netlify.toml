@@ -1,7 +1,20 @@
 [build]
   publish = "dist"
   command = "npm run build"
+
+# API proxy rules must come BEFORE the SPA fallback
+[[redirects]]
+  from = "/api/luogu/*"
+  to = "/.netlify/functions/luogu-proxy/:splat"
+  status = 200
+
+# SPA fallback - must be last
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+[dev]
+  command = "npm run dev"
+  targetPort = 5173
+  port = 8888

@@ -83,7 +83,7 @@ export function TagsInput({
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal={false}>
       <PopoverTrigger asChild>
         <div
           className="flex min-h-9 w-full flex-wrap items-center gap-1 rounded-none border border-input bg-transparent px-2 py-1 text-sm transition-colors focus-within:ring-1 focus-within:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
@@ -123,7 +123,11 @@ export function TagsInput({
           />
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+      <PopoverContent
+        className="w-[--radix-popover-trigger-width] p-0"
+        align="start"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <Command>
           <CommandList>
             <CommandEmpty>
