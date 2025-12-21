@@ -52,10 +52,24 @@ function getRatingColor(rating: number): {
       border: "border-orange-600",
     };
   }
+  if (rating < 2600) {
+    return {
+      bg: "bg-red-400",
+      text: "text-white",
+      border: "border-red-500",
+    };
+  }
+  if (rating < 3000) {
+    return {
+      bg: "bg-red-500",
+      text: "text-white",
+      border: "border-red-600",
+    };
+  }
   return {
-    bg: "bg-red-500",
+    bg: "bg-red-800",
     text: "text-white",
-    border: "border-red-600",
+    border: "border-red-900",
   };
 }
 

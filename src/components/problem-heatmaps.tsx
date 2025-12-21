@@ -176,7 +176,9 @@ export function getDifficultyLevel(rating: number): number {
   if (rating < 1900) return 4;
   if (rating < 2100) return 5;
   if (rating < 2400) return 6;
-  return 7;
+  if (rating < 2600) return 7;
+  if (rating < 3000) return 8;
+  return 9;
 }
 
 // Difficulty color palette
@@ -187,7 +189,9 @@ export const DIFFICULTY_COLORS = [
   "#3b82f6", // 4: blue (1600-1899)
   "#a855f7", // 5: purple (1900-2099)
   "#f97316", // 6: orange (2100-2399)
-  "#ef4444", // 7: red (2400+)
+  "#f87171", // 7: light red (2400-2599)
+  "#ef4444", // 8: red (2600-2999)
+  "#991b1b", // 9: dark red (3000+)
 ];
 
 export const DIFFICULTY_LABELS = [
@@ -197,7 +201,9 @@ export const DIFFICULTY_LABELS = [
   "1600-1899",
   "1900-2099",
   "2100-2399",
-  "2400+",
+  "2400-2599",
+  "2600-2999",
+  "3000+",
 ];
 
 export function MaxDifficultyHeatmap({
