@@ -196,7 +196,7 @@ export async function fetchCodeforces(handle: string): Promise<SolvedProblem[]> 
             id: id++,
             题目: `https://codeforces.com/contest/${submission.contestId}/problem/${submission.problem.index}`,
             题目名称: submission.problem.name,
-            难度: submission.problem.rating?.toString() ?? "",
+            难度: submission.problem.rating?.toString(),
             题解: "",
             关键词: submission.problem.tags.join(", "),
             日期: dateStr,
@@ -260,7 +260,7 @@ export async function fetchAtCoder(handle: string): Promise<SolvedProblem[]> {
             id: id++,
             题目: `https://atcoder.jp/contests/${submission.contest_id}/tasks/${submission.problem_id}`,
             题目名称: problemName,
-            难度: difficultyStr,
+            难度: difficultyStr || undefined,
             题解: "",
             关键词: "",
             日期: dateStr,
@@ -305,10 +305,10 @@ function formatTimestamp(seconds: number): string {
     return date.toISOString().replace("T", " ").slice(0, 19);
 }
 
-function luoguDifficultyToCfRating(difficulty: number | null | undefined): string {
-    if (difficulty === null || difficulty === undefined) return "";
+function luoguDifficultyToCfRating(difficulty: number | null | undefined): string | undefined {
+    if (difficulty === null || difficulty === undefined) return undefined;
     const rating = LUOGU_CF_RATING_MAP[difficulty];
-    return rating ? rating.toString() : "";
+    return rating ? rating.toString() : undefined;
 }
 
 function buildLuoguCookie(uid: string, clientId: string): string {

@@ -125,6 +125,7 @@ export function ProblemsTable({
             { label: "Nowcoder", value: "Nowcoder" },
             { label: "Luogu", value: "Luogu" },
             { label: "Vjudge", value: "Vjudge" },
+            { label: "QOJ", value: "QOJ" },
           ],
           icon: LinkIcon,
           className: "hidden md:table-cell",
@@ -211,6 +212,7 @@ export function ProblemsTable({
         cell: ({ row }) => <RatingBadge rating={row.getValue("difficulty")} />,
         filterFn: (row: Row<SolvedProblem>, _id: string, filterValue: [number, number]) => {
           if (!filterValue || filterValue.length !== 2) return true;
+          if (!row.original.难度) return false;
           const difficulty = parseInt(row.original.难度);
           return difficulty >= filterValue[0] && difficulty <= filterValue[1];
         },

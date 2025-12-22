@@ -24,7 +24,7 @@ interface YearHeatmapProps extends ProblemHeatmapsProps {
 interface DayProblemMeta {
   problems: Array<{
     name: string;
-    difficulty: string;
+    difficulty?: string;
     url: string;
   }>;
 }
@@ -217,6 +217,7 @@ export function MaxDifficultyHeatmap({
 
     problems.forEach((p) => {
       const date = parseDate(p.日期);
+      if (!p.难度) return;
       const rating = parseInt(p.难度, 10);
       if (!isNaN(rating)) {
         if (!dataByDate[date]) {

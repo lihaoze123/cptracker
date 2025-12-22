@@ -20,7 +20,7 @@ export function exportToCSV({
   const data = problems.map((p) => ({
     题目: p.题目,
     题目名称: p.题目名称 || "",
-    难度: p.难度,
+    难度: p.难度 || "",
     题解: p.题解,
     关键词: p.关键词,
     日期: p.日期,
@@ -63,13 +63,9 @@ export function parseCSV(file: File): Promise<CSVImportResult> {
             return;
           }
 
-          if (!row.难度?.trim()) {
-            errors.push({ row: rowNum, message: "缺少难度字段" });
-            return;
-          }
-
-          const difficulty = row.难度.trim();
-          if (!/^\d+$/.test(difficulty)) {
+          // Validate difficulty if provided
+          const difficulty = row.难度?.trim();
+          if (difficulty && !/^\d+$/.test(difficulty)) {
             errors.push({ row: rowNum, message: "难度必须是数字" });
             return;
           }
@@ -85,7 +81,7 @@ export function parseCSV(file: File): Promise<CSVImportResult> {
           success.push({
             题目: row.题目.trim(),
             题目名称: row.题目名称?.trim() || undefined,
-            难度: difficulty,
+            难度: difficulty || undefined,
             题解: row.题解?.trim() || "",
             关键词: normalizedTags,
             日期: row.日期?.trim() || (() => {

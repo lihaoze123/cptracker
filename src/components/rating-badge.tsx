@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 interface RatingBadgeProps {
-  rating: number | string;
+  rating: number | string | undefined;
   className?: string;
 }
 
@@ -76,7 +76,7 @@ function getRatingColor(rating: number): {
 export function RatingBadge({ rating, className }: RatingBadgeProps) {
   const numRating = typeof rating === "string" ? parseInt(rating, 10) : rating;
 
-  if (isNaN(numRating)) {
+  if (!numRating || isNaN(numRating)) {
     return (
       <span
         className={cn(

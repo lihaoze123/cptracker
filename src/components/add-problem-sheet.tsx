@@ -86,9 +86,7 @@ export function AddProblemSheet({ onAdd, open: controlledOpen, onOpenChange }: A
       }
     }
 
-    if (!formData.难度.trim()) {
-      newErrors.难度 = "难度不能为空";
-    } else if (!/^\d+$/.test(formData.难度)) {
+    if (formData.难度.trim() && !/^\d+$/.test(formData.难度)) {
       newErrors.难度 = "难度必须是数字";
     }
 
@@ -112,7 +110,7 @@ export function AddProblemSheet({ onAdd, open: controlledOpen, onOpenChange }: A
       const success = await onAdd({
         题目: formData.题目.trim(),
         题目名称: formData.题目名称.trim() || undefined,
-        难度: formData.难度.trim(),
+        难度: formData.难度.trim() || undefined,
         题解: formData.题解.trim(),
         关键词: normalizedTags,
         日期: formData.日期,
@@ -184,7 +182,7 @@ export function AddProblemSheet({ onAdd, open: controlledOpen, onOpenChange }: A
 
           <div className="grid gap-2">
             <Label htmlFor="difficulty">
-              Difficulty <span className="text-destructive">*</span>
+              Difficulty
             </Label>
             <Input
               id="difficulty"
