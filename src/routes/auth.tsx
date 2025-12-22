@@ -19,14 +19,9 @@ function AuthRoute() {
     navigate({ to: "/" });
   };
 
-  const handleBackFromAuth = () => {
-    navigate({ to: "/" });
-  };
-
   return (
     <AuthPage
       initialView={view as AuthView}
-      onBack={handleBackFromAuth}
       onSuccess={handleAuthSuccess}
     />
   );

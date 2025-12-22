@@ -18,7 +18,7 @@ import { useAuth } from "@/contexts/auth-context";
 import type { SolvedProblem } from "@/data/mock";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
-import { User, Github } from "lucide-react";
+import { User } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   validateSearch: z.object({
@@ -91,21 +91,6 @@ function Dashboard() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              asChild
-            >
-              <a
-                href="https://github.com/lihaoze123/cptracker"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="View on GitHub"
-              >
-                <Github className="h-4 w-4" />
-              </a>
-            </Button>
             {user ? (
               <UserAvatar email={user.email} size={32} className="cursor-pointer" />
             ) : (
