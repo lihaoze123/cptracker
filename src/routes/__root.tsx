@@ -29,6 +29,23 @@ function RootComponent() {
   const currentNav = navItems.find((item) => item.url === currentPath);
   const pageTitle = currentNav?.title ?? "Page";
 
+  // Fullscreen routes without sidebar
+  const isFullscreenRoute = currentPath === "/year-review";
+
+  if (isFullscreenRoute) {
+    return (
+      <AuthProvider>
+        <NuqsAdapter>
+          <TooltipProvider>
+            <Outlet />
+            <Toaster />
+            {import.meta.env.DEV && <TanStackRouterDevtools />}
+          </TooltipProvider>
+        </NuqsAdapter>
+      </AuthProvider>
+    );
+  }
+
   return (
     <AuthProvider>
       <NuqsAdapter>

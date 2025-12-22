@@ -2,6 +2,11 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/jetbrains-mono";
+@import "@fontsource-variable/inter-tight";
+@import "@fontsource/instrument-serif/400.css";
+@import "@fontsource/instrument-serif/400-italic.css";
+@import "@fontsource/space-mono/400.css";
+@import "@fontsource/space-mono/700.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -76,6 +81,12 @@
 
 @theme inline {
     --font-sans: 'JetBrains Mono Variable', monospace;
+    --font-serif: 'Instrument Serif', serif;
+    --font-mono: 'Space Mono', 'JetBrains Mono Variable', monospace;
+    --font-display: 'Inter Tight Variable', 'Inter Tight', sans-serif;
+    --color-hero-blue: #3B82F6;
+    --color-hero-purple: #8B5CF6;
+    --color-code-yellow: #EAB308;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);

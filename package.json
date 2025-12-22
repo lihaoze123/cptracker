@@ -1,7 +1,7 @@
 {
   "name": "cptracker",
   "private": true,
-  "version": "0.0.4",
+  "version": "0.0.5",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,7 +12,10 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
+    "@fontsource-variable/inter-tight": "^5.2.7",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
+    "@fontsource/instrument-serif": "^5.2.8",
+    "@fontsource/space-mono": "^5.2.9",
     "@hugeicons/core-free-icons": "^3.0.0",
     "@hugeicons/react": "^1.1.2",
     "@netlify/functions": "^2.8.2",
@@ -24,11 +27,14 @@
     "@tanstack/router-devtools": "^1.141.6",
     "@tanstack/router-vite-plugin": "^1.141.7",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "dexie": "^4.2.1",
+    "framer-motion": "^12.23.26",
+    "html-to-image": "^1.11.13",
     "lucide-react": "^0.561.0",
     "nuqs": "^2.8.5",
     "papaparse": "^5.5.3",
@@ -51,6 +57,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@tanstack/router-cli": "^1.141.7",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^24.10.1",
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19.2.5",

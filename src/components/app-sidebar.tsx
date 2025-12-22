@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, type LucideIcon } from "lucide-react";
+import { Home, Sparkles, type LucideIcon } from "lucide-react";
 
 import {
   Sidebar,
@@ -23,6 +23,11 @@ const navItems: NavItem[] = [
     title: "Home",
     url: "/",
     icon: Home,
+  },
+  {
+    title: "Year Review",
+    url: "/year-review",
+    icon: Sparkles,
   },
 ];
 
