@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS problems (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   "题目" TEXT NOT NULL,
+  "题目名称" TEXT,
   "难度" TEXT NOT NULL,
   "题解" TEXT DEFAULT '',
   "关键词" TEXT DEFAULT '',

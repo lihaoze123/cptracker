@@ -188,6 +188,7 @@ export function OJImport({ onImport }: OJImportProps) {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   仅需两个字段：_uid 与 __client_id，会保存在本地 localStorage 并用于请求洛谷。
+                  为了防止请求过快对 Luogu 服务器造成负担，可能需要抓取较长时间（取决于提交数量）。
                 </p>
               </div>
             )}

@@ -12,8 +12,8 @@ const db = new Dexie("ProblemsDB") as Dexie & {
   problems: EntityTable<StoredProblem, "id">;
 };
 
-db.version(2).stores({
-  problems: "++id, 难度, 日期, syncedAt, supabase_id, pending_sync, pending_delete",
+db.version(3).stores({
+  problems: "++id, 难度, 日期, 题目名称, syncedAt, supabase_id, pending_sync, pending_delete",
 });
 
 export { db };

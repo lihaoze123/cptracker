@@ -1,6 +1,7 @@
 export interface SolvedProblem {
   id: number;
   题目: string;
+  题目名称?: string;
   难度: string;
   题解: string;
   关键词: string;
