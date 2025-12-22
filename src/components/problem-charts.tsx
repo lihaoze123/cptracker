@@ -20,6 +20,7 @@ import {
   ChartLegendContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { motion } from "framer-motion";
 import {
   getDifficultyLevel,
   DIFFICULTY_COLORS,
@@ -487,21 +488,49 @@ export function ProblemChartsSection({
         <h2 className="text-lg font-semibold">Charts Overview</h2>
         <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
       </div>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <RatingDistributionBarChart
-          problems={filteredProblems}
-          isLoading={isLoading}
-        />
-        <RatingDistributionPieChart
-          problems={filteredProblems}
-          isLoading={isLoading}
-        />
-        <ActivityStackedChart
-          problems={problems}
-          timeRange={timeRange}
-          isLoading={isLoading}
-        />
-      </div>
+      <motion.div
+        className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+        initial="hidden"
+        animate="visible"
+        variants={{
+          visible: { transition: { staggerChildren: 0.05 } },
+        }}
+      >
+        <motion.div
+          variants={{
+            hidden: { opacity: 0, scale: 0.95 },
+            visible: { opacity: 1, scale: 1 },
+          }}
+        >
+          <RatingDistributionBarChart
+            problems={filteredProblems}
+            isLoading={isLoading}
+          />
+        </motion.div>
+        <motion.div
+          variants={{
+            hidden: { opacity: 0, scale: 0.95 },
+            visible: { opacity: 1, scale: 1 },
+          }}
+        >
+          <RatingDistributionPieChart
+            problems={filteredProblems}
+            isLoading={isLoading}
+          />
+        </motion.div>
+        <motion.div
+          variants={{
+            hidden: { opacity: 0, scale: 0.95 },
+            visible: { opacity: 1, scale: 1 },
+          }}
+        >
+          <ActivityStackedChart
+            problems={problems}
+            timeRange={timeRange}
+            isLoading={isLoading}
+          />
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

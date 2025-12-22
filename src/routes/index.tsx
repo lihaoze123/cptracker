@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { z } from "zod";
+import { motion } from "framer-motion";
 import {
   ProblemCountHeatmap,
   MaxDifficultyHeatmap,
@@ -77,26 +78,38 @@ function Dashboard() {
     );
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+      },
+    },
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-4 md:py-8 px-4 space-y-6">
-        <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 select-none">
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl md:text-2xl font-bold">CP Tracker</h1>
-              <StorageModeBadge isCloudMode={isCloudMode} isSyncing={isSyncing} />
-            </div>
-            <p className="text-sm md:text-base text-muted-foreground">
-              Track your problem-solving progress and performance
-            </p>
+    <div className="min-h-screen bg-transparent">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4 select-none">
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <h1 className="text-xl font-bold tracking-tight">CP Tracker</h1>
+            <StorageModeBadge isCloudMode={isCloudMode} isSyncing={isSyncing} />
           </div>
-          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              asChild
-            >
+
+          <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+            <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
               <a
                 href="https://github.com/lihaoze123/cptracker"
                 target="_blank"
@@ -107,9 +120,17 @@ function Dashboard() {
               </a>
             </Button>
             {user ? (
-              <UserAvatar email={user.email} size={32} className="cursor-pointer" />
+              <UserAvatar
+                email={user.email}
+                size={32}
+                className="cursor-pointer"
+              />
             ) : (
-              <Button variant="outline" size="sm" onClick={handleNavigateToAuth}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNavigateToAuth}
+              >
                 <User className="h-4 w-4 mr-2" />
                 Sign In
               </Button>
@@ -127,13 +148,33 @@ function Dashboard() {
               isSyncing={isSyncing}
             />
           </div>
-        </header>
+        </div>
+      </header>
 
-        <OverviewStats problems={dbProblems} isLoading={isLoading} />
+      <motion.div
+        className="container mx-auto py-8 px-4 space-y-8"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
+        <motion.div variants={itemVariants}>
+          <div className="space-y-1 mb-6">
+            <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+            <p className="text-muted-foreground">
+              Track your problem-solving progress and performance
+            </p>
+          </div>
+          <OverviewStats problems={dbProblems} isLoading={isLoading} />
+        </motion.div>
 
-        <ProblemChartsSection problems={dbProblems} isLoading={isLoading} />
+        <motion.div variants={itemVariants}>
+          <ProblemChartsSection problems={dbProblems} isLoading={isLoading} />
+        </motion.div>
 
-        <div className="grid gap-6 md:grid-cols-2 select-none">
+        <motion.div
+          variants={itemVariants}
+          className="grid gap-6 md:grid-cols-2 select-none"
+        >
           <ProblemCountHeatmap
             problems={filteredProblems}
             selectedYear={selectedYear}
@@ -146,15 +187,17 @@ function Dashboard() {
             onYearChange={setSelectedYear}
             availableYears={availableYears}
           />
-        </div>
+        </motion.div>
 
-        <ProblemsTable
-          problems={dbProblems}
-          onFilteredDataChange={setFilteredProblems}
-          onAddProblem={handleAddProblem}
-          onEditProblem={handleEditProblem}
-        />
-      </div>
+        <motion.div variants={itemVariants}>
+          <ProblemsTable
+            problems={dbProblems}
+            onFilteredDataChange={setFilteredProblems}
+            onAddProblem={handleAddProblem}
+            onEditProblem={handleEditProblem}
+          />
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { LucideIcon } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface StatsCardProps {
   title: string;
@@ -41,6 +42,8 @@ function useCountUp(target: number, duration: number = 1000) {
   return count;
 }
 
+const MotionCard = motion(Card);
+
 export function StatsCard({ title, value, icon: Icon, isLoading }: StatsCardProps) {
   const displayValue = useCountUp(value, 1000);
 
@@ -56,7 +59,10 @@ export function StatsCard({ title, value, icon: Icon, isLoading }: StatsCardProp
   }
 
   return (
-    <Card className="animate-fade-scale-in">
+    <MotionCard
+      whileHover={{ y: -2 }}
+      className="transition-all hover:shadow-md"
+    >
       <CardContent className="pt-4">
         <div className="flex items-center justify-between">
           <div>
@@ -66,6 +72,6 @@ export function StatsCard({ title, value, icon: Icon, isLoading }: StatsCardProp
           <Icon className="h-8 w-8 text-muted-foreground opacity-50" />
         </div>
       </CardContent>
-    </Card>
+    </MotionCard>
   );
 }
