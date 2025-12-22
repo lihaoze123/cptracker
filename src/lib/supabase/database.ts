@@ -10,7 +10,8 @@ export interface SupabaseProblem {
   id: string; // UUID
   user_id: string;
   题目: string;
-  难度: string;
+  题目名称?: string;
+  难度?: string;
   题解: string;
   关键词: string;
   日期: string;
@@ -27,6 +28,7 @@ export function toLocalProblem(
     id: localId ?? 0,
     supabase_id: problem.id,
     题目: problem.题目,
+    题目名称: problem.题目名称,
     难度: problem.难度,
     题解: problem.题解,
     关键词: problem.关键词,
@@ -38,6 +40,7 @@ export function toLocalProblem(
 export function toSupabaseData(problem: Omit<SolvedProblem, "id">) {
   return {
     题目: problem.题目,
+    题目名称: problem.题目名称,
     难度: problem.难度,
     题解: problem.题解,
     关键词: problem.关键词,

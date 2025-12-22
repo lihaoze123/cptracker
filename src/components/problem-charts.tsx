@@ -108,6 +108,7 @@ function RatingDistributionBarChart({
   const data = useMemo(() => {
     return DIFFICULTY_LABELS.map((label, index) => {
       const count = problems.filter((p) => {
+        if (!p.难度) return false;
         const rating = parseInt(p.难度, 10);
         return !isNaN(rating) && getDifficultyLevel(rating) === index + 1;
       }).length;
@@ -197,6 +198,7 @@ function RatingDistributionPieChart({
     const total = problems.length;
     return DIFFICULTY_LABELS.map((label, index) => {
       const count = problems.filter((p) => {
+        if (!p.难度) return false;
         const rating = parseInt(p.难度, 10);
         return !isNaN(rating) && getDifficultyLevel(rating) === index + 1;
       }).length;
@@ -331,6 +333,7 @@ function ActivityStackedChart({
 
         DIFFICULTY_LABELS.forEach((diffLabel, index) => {
           result[diffLabel] = monthProblems.filter((p) => {
+            if (!p.难度) return false;
             const rating = parseInt(p.难度, 10);
             return !isNaN(rating) && getDifficultyLevel(rating) === index + 1;
           }).length;
@@ -371,6 +374,7 @@ function ActivityStackedChart({
 
       DIFFICULTY_LABELS.forEach((label, index) => {
         result[label] = dayProblems.filter((p) => {
+          if (!p.难度) return false;
           const rating = parseInt(p.难度, 10);
           return !isNaN(rating) && getDifficultyLevel(rating) === index + 1;
         }).length;

@@ -2,8 +2,6 @@ import { useState } from "react";
 import { SignUpForm } from "./sign-up-form";
 import { ForgotPasswordForm } from "./forgot-password-form";
 import { UpdatePasswordForm } from "./update-password-form";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -15,29 +13,20 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 export type AuthView = "login" | "sign-up" | "forgot-password" | "update-password";
 
 interface AuthPageProps {
   initialView?: AuthView;
-  onBack?: () => void;
   onSuccess?: () => void;
 }
 
-export function AuthPage({ initialView = "login", onBack, onSuccess }: AuthPageProps) {
+export function AuthPage({ initialView = "login", onSuccess }: AuthPageProps) {
   const [view, setView] = useState<AuthView>(initialView);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      {onBack && (
-        <div className="absolute top-4 left-4">
-          <Button variant="ghost" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-        </div>
-      )}
-
+    <div className="flex flex-col items-center justify-center p-4 flex-1">
       <div className="w-full max-w-md">
         {view === "login" && <LoginFormWrapper onSuccess={onSuccess} onNavigate={setView} />}
         {view === "sign-up" && <SignUpFormWrapper onNavigate={setView} />}

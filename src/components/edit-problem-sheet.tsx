@@ -33,6 +33,7 @@ export function EditProblemSheet({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     题目: "",
+    题目名称: "",
     难度: "",
     题解: "",
     关键词: "",
@@ -54,7 +55,8 @@ export function EditProblemSheet({
     if (problem && open) {
       setFormData({
         题目: problem.题目,
-        难度: problem.难度,
+        题目名称: problem.题目名称 || "",
+        难度: problem.难度 || "",
         题解: problem.题解,
         关键词: problem.关键词,
         日期: problem.日期,
@@ -76,9 +78,7 @@ export function EditProblemSheet({
       }
     }
 
-    if (!formData.难度.trim()) {
-      newErrors.难度 = "难度不能为空";
-    } else if (!/^\d+$/.test(formData.难度)) {
+    if (formData.难度.trim() && !/^\d+$/.test(formData.难度)) {
       newErrors.难度 = "难度必须是数字";
     }
 
@@ -101,7 +101,8 @@ export function EditProblemSheet({
 
       const success = await onEdit(problem.id, {
         题目: formData.题目.trim(),
-        难度: formData.难度.trim(),
+        题目名称: formData.题目名称.trim() || undefined,
+        难度: formData.难度.trim() || undefined,
         题解: formData.题解.trim(),
         关键词: normalizedTags,
         日期: formData.日期,
@@ -155,8 +156,18 @@ export function EditProblemSheet({
           </div>
 
           <div className="grid gap-2">
+            <Label htmlFor="edit-problem-name">Problem Name</Label>
+            <Input
+              id="edit-problem-name"
+              placeholder="Problem title (optional)"
+              value={formData.题目名称}
+              onChange={(e) => handleChange("题目名称", e.target.value)}
+            />
+          </div>
+
+          <div className="grid gap-2">
             <Label htmlFor="edit-difficulty">
-              Difficulty <span className="text-destructive">*</span>
+              Difficulty
             </Label>
             <Input
               id="edit-difficulty"

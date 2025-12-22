@@ -18,7 +18,7 @@ import { useAuth } from "@/contexts/auth-context";
 import type { SolvedProblem } from "@/data/mock";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
-import { User, Github } from "lucide-react";
+import { User, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   validateSearch: z.object({
@@ -91,21 +91,6 @@ function Dashboard() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              asChild
-            >
-              <a
-                href="https://github.com/lihaoze123/cptracker"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="View on GitHub"
-              >
-                <Github className="h-4 w-4" />
-              </a>
-            </Button>
             {user ? (
               <UserAvatar email={user.email} size={32} className="cursor-pointer" />
             ) : (
@@ -130,6 +115,20 @@ function Dashboard() {
         </header>
 
         <OverviewStats problems={dbProblems} isLoading={isLoading} />
+
+        {/* Year Review Button */}
+        {dbProblems.length > 0 && (
+          <div className="flex justify-center">
+            <Button
+              size="lg"
+              onClick={() => navigate({ to: "/year-review" })}
+              className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-8"
+            >
+              <Sparkles className="h-5 w-5" />
+              View {new Date().getFullYear()} Year in Review
+            </Button>
+          </div>
+        )}
 
         <ProblemChartsSection problems={dbProblems} isLoading={isLoading} />
 

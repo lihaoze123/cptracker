@@ -27,6 +27,14 @@ interface AtCoderProblemModel {
 
 type AtCoderProblemModels = Record<string, AtCoderProblemModel>;
 
+interface AtCoderProblem {
+    id: string;
+    contest_id: string;
+    problem_index: string;
+    name: string;
+    title: string;
+}
+
 // Luogu interfaces
 interface LuoguUserSummary {
     uid: number;
@@ -187,7 +195,8 @@ export async function fetchCodeforces(handle: string): Promise<SolvedProblem[]> 
         problems.push({
             id: id++,
             题目: `https://codeforces.com/contest/${submission.contestId}/problem/${submission.problem.index}`,
-            难度: submission.problem.rating?.toString() ?? "",
+            题目名称: submission.problem.name,
+            难度: submission.problem.rating?.toString(),
             题解: "",
             关键词: submission.problem.tags.join(", "),
             日期: dateStr,
@@ -198,14 +207,22 @@ export async function fetchCodeforces(handle: string): Promise<SolvedProblem[]> 
 }
 
 export async function fetchAtCoder(handle: string): Promise<SolvedProblem[]> {
-    // Fetch submissions and problem models in parallel
-    const [submissionsResponse, modelsResponse] = await Promise.all([
+    // Fetch submissions, problem models, and problem names in parallel
+    const [submissionsResponse, modelsResponse, problemsResponse] = await Promise.all([
         fetch(`https://kenkoooo.com/atcoder/atcoder-api/v3/user/submissions?user=${handle}&from_second=0`),
         fetch(`https://kenkoooo.com/atcoder/resources/problem-models.json`),
+        fetch(`https://kenkoooo.com/atcoder/resources/problems.json`),
     ]);
 
     const submissions: AtCoderSubmission[] = await submissionsResponse.json();
     const problemModels: AtCoderProblemModels = await modelsResponse.json();
+    const problemsData: AtCoderProblem[] = await problemsResponse.json();
+
+    // Create a map from problem_id to problem name
+    const problemNames = new Map<string, string>();
+    for (const problem of problemsData) {
+        problemNames.set(problem.id, problem.name);
+    }
 
     // Filter AC submissions and keep earliest solve for each problem
     const solvedMap = new Map<string, AtCoderSubmission>();
@@ -236,10 +253,14 @@ export async function fetchAtCoder(handle: string): Promise<SolvedProblem[]> {
             difficultyStr = cfRating.toString();
         }
 
+        // Get problem name
+        const problemName = problemNames.get(submission.problem_id);
+
         problems.push({
             id: id++,
             题目: `https://atcoder.jp/contests/${submission.contest_id}/tasks/${submission.problem_id}`,
-            难度: difficultyStr,
+            题目名称: problemName,
+            难度: difficultyStr || undefined,
             题解: "",
             关键词: "",
             日期: dateStr,
@@ -284,15 +305,19 @@ function formatTimestamp(seconds: number): string {
     return date.toISOString().replace("T", " ").slice(0, 19);
 }
 
-function luoguDifficultyToCfRating(difficulty: number | null | undefined): string {
-    if (difficulty === null || difficulty === undefined) return "";
+function luoguDifficultyToCfRating(difficulty: number | null | undefined): string | undefined {
+    if (difficulty === null || difficulty === undefined) return undefined;
     const rating = LUOGU_CF_RATING_MAP[difficulty];
-    return rating ? rating.toString() : "";
+    return rating ? rating.toString() : undefined;
 }
 
 function buildLuoguCookie(uid: string, clientId: string): string {
     if (!uid || !clientId) return "";
     return `_uid=${uid}; __client_id=${clientId};`;
+}
+
+function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export async function fetchLuogu(handle: string): Promise<SolvedProblem[]> {
@@ -314,6 +339,9 @@ export async function fetchLuogu(handle: string): Promise<SolvedProblem[]> {
     const practiceData: LuoguPracticeResponse = await practiceResponse.json();
     const passedProblems = practiceData.data?.passed ?? [];
     const passedSet = new Set(passedProblems.map((p) => p.pid));
+
+    // Add delay before fetching records
+    await sleep(100);
 
     // Traverse accepted records to collect earliest AC time per problem
     const earliestRecord = new Map<string, LuoguAcceptedRecord>();
@@ -357,6 +385,9 @@ export async function fetchLuogu(handle: string): Promise<SolvedProblem[]> {
         const total = listData.count ?? records.length;
         const reachedEnd = perPage === 0 || records.length === 0 || page * perPage >= total;
         if (reachedEnd) break;
+
+        // make chen_zhe happy
+        await sleep(500);
         page += 1;
     }
 
@@ -365,6 +396,7 @@ export async function fetchLuogu(handle: string): Promise<SolvedProblem[]> {
         .map((record, index) => ({
             id: index + 1,
             题目: `https://www.luogu.com.cn/problem/${record.problem.pid}`,
+            题目名称: record.problem.title,
             难度: luoguDifficultyToCfRating(record.problem.difficulty),
             题解: "",
             关键词: "",

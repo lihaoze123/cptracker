@@ -125,6 +125,7 @@ export function ProblemsTable({
             { label: "Nowcoder", value: "Nowcoder" },
             { label: "Luogu", value: "Luogu" },
             { label: "Vjudge", value: "Vjudge" },
+            { label: "QOJ", value: "QOJ" },
           ],
           icon: LinkIcon,
           className: "hidden md:table-cell",
@@ -149,7 +150,7 @@ export function ProblemsTable({
                 href={url || row.original.题目}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:underline"
+                className="hover:underline font-mono text-sm"
               >
                 {name}
               </a>
@@ -165,9 +166,39 @@ export function ProblemsTable({
         },
         meta: {
           label: "Problem",
-          placeholder: "Search problems...",
+          placeholder: "Search problem ID...",
           variant: "text",
           icon: FileText,
+        },
+        enableColumnFilter: true,
+        enableSorting: true,
+      },
+      {
+        id: "name",
+        accessorKey: "题目名称",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} label="Name" />
+        ),
+        cell: ({ row }) => {
+          const name = row.getValue<string | undefined>("name");
+          return name ? (
+            <span className="text-sm">{name}</span>
+          ) : (
+            <span className="text-muted-foreground text-xs italic">-</span>
+          );
+        },
+        filterFn: (row: Row<SolvedProblem>, _id: string, filterValue: string) => {
+          if (!filterValue) return true;
+          const name = row.original.题目名称?.toLowerCase() || "";
+          return name.includes(filterValue.toLowerCase());
+        },
+        meta: {
+          label: "Name",
+          placeholder: "Search problem name...",
+          variant: "text",
+          icon: FileText,
+          className: "hidden lg:table-cell",
+          filterClassName: "hidden lg:flex",
         },
         enableColumnFilter: true,
         enableSorting: true,
@@ -181,6 +212,7 @@ export function ProblemsTable({
         cell: ({ row }) => <RatingBadge rating={row.getValue("difficulty")} />,
         filterFn: (row: Row<SolvedProblem>, _id: string, filterValue: [number, number]) => {
           if (!filterValue || filterValue.length !== 2) return true;
+          if (!row.original.难度) return false;
           const difficulty = parseInt(row.original.难度);
           return difficulty >= filterValue[0] && difficulty <= filterValue[1];
         },

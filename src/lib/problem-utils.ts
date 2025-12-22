@@ -108,6 +108,17 @@ export function extractProblemInfo(text: string): ProblemInfo {
       }
     }
 
+    if (hostname.includes("qoj.ac")) {
+      const match = url.match(/problem\/(\d+)/);
+      if (match) {
+        return {
+          source: "QOJ",
+          name: `QOJ${match[1]}`,
+          isURL: true,
+        };
+      }
+    }
+
     return { source: hostname, name: url, isURL: true };
   } catch {
     return { source: "Unknown", name: url, isURL: true };

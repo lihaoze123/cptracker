@@ -11,7 +11,7 @@ export interface CSVImportResult {
   errors: { row: number; message: string }[];
 }
 
-const CSV_HEADERS = ["题目", "难度", "题解", "关键词", "日期"] as const;
+const CSV_HEADERS = ["题目", "题目名称", "难度", "题解", "关键词", "日期"] as const;
 
 export function exportToCSV({
   problems,
@@ -19,7 +19,8 @@ export function exportToCSV({
 }: CSVExportOptions): void {
   const data = problems.map((p) => ({
     题目: p.题目,
-    难度: p.难度,
+    题目名称: p.题目名称 || "",
+    难度: p.难度 || "",
     题解: p.题解,
     关键词: p.关键词,
     日期: p.日期,
@@ -62,13 +63,9 @@ export function parseCSV(file: File): Promise<CSVImportResult> {
             return;
           }
 
-          if (!row.难度?.trim()) {
-            errors.push({ row: rowNum, message: "缺少难度字段" });
-            return;
-          }
-
-          const difficulty = row.难度.trim();
-          if (!/^\d+$/.test(difficulty)) {
+          // Validate difficulty if provided
+          const difficulty = row.难度?.trim();
+          if (difficulty && !/^\d+$/.test(difficulty)) {
             errors.push({ row: rowNum, message: "难度必须是数字" });
             return;
           }
@@ -83,7 +80,8 @@ export function parseCSV(file: File): Promise<CSVImportResult> {
 
           success.push({
             题目: row.题目.trim(),
-            难度: difficulty,
+            题目名称: row.题目名称?.trim() || undefined,
+            难度: difficulty || undefined,
             题解: row.题解?.trim() || "",
             关键词: normalizedTags,
             日期: row.日期?.trim() || (() => {
@@ -109,6 +107,7 @@ export function generateCSVTemplate(): void {
   const templateData = [
     {
       题目: "https://codeforces.com/contest/1234/problem/A",
+      题目名称: "Example Problem",
       难度: "1600",
       题解: "https://github.com/user/solutions/1234A.cpp",
       关键词: "DP, 贪心",

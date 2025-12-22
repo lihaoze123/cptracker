@@ -22,7 +22,7 @@ import { CloudDownloadIcon } from "@hugeicons/core-free-icons";
 import { fetchCodeforces, fetchAtCoder, fetchLuogu } from "@/lib/fetchOJs";
 import type { SolvedProblem } from "@/data/mock";
 
-type OJType = "codeforces" | "atcoder" | "luogu";
+type OJType = "codeforces" | "atcoder" | "luogu" | "qoj";
 
 interface OJImportProps {
   onImport: (problems: Omit<SolvedProblem, "id">[], clearExisting: boolean) => Promise<boolean>;
@@ -99,6 +99,7 @@ export function OJImport({ onImport }: OJImportProps) {
     codeforces: "Codeforces",
     atcoder: "AtCoder",
     luogu: "洛谷",
+    qoj: "QOJ",
   };
 
   return (
@@ -135,10 +136,12 @@ export function OJImport({ onImport }: OJImportProps) {
                   <SelectItem value="codeforces">Codeforces</SelectItem>
                   <SelectItem value="atcoder">AtCoder</SelectItem>
                   <SelectItem value="luogu">洛谷</SelectItem>
+                  <SelectItem value="qoj">QOJ (油猴脚本)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
+            {selectedOJ !== "qoj" && (
             <div className="space-y-2">
               <label className="text-sm font-medium">用户名</label>
               <div className="flex gap-2">
@@ -160,6 +163,7 @@ export function OJImport({ onImport }: OJImportProps) {
                 </Button>
               </div>
             </div>
+            )}
 
             {selectedOJ === "luogu" && (
               <div className="space-y-2">
@@ -188,7 +192,63 @@ export function OJImport({ onImport }: OJImportProps) {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   仅需两个字段：_uid 与 __client_id，会保存在本地 localStorage 并用于请求洛谷。
+                  为了防止请求过快对 Luogu 服务器造成负担，可能需要抓取较长时间（取决于提交数量）。
                 </p>
+              </div>
+            )}
+
+            {selectedOJ === "qoj" && (
+              <div className="space-y-3 rounded-lg border border-muted bg-muted/30 p-4">
+                <div>
+                  <h4 className="text-sm font-medium">QOJ 有 Cloudflare 防护，需要使用油猴脚本导出</h4>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    由于 QOJ 启用了 Cloudflare 人机验证，无法直接抓取。请按以下步骤操作：
+                  </p>
+                </div>
+
+                <ol className="ml-4 list-decimal space-y-2 text-xs text-muted-foreground">
+                  <li>安装油猴插件：
+                    <a
+                      href="https://www.tampermonkey.net/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-1 text-primary underline hover:text-primary/80"
+                    >
+                      Tampermonkey
+                    </a>
+                    {" "}或
+                    <a
+                      href="https://violentmonkey.github.io/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-1 text-primary underline hover:text-primary/80"
+                    >
+                      Violentmonkey
+                    </a>
+                  </li>
+                  <li>
+                    安装 QOJ 导出脚本：
+                    <a
+                      href="/qoj-export.user.js"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-1 rounded bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                    >
+                      点击安装脚本
+                    </a>
+                  </li>
+                  <li>访问 QOJ 提交页面并登录</li>
+                  <li>访问 <code className="rounded bg-muted px-1 py-0.5 text-xs">/submissions?submitter=你的用户名&min_score=100</code></li>
+                  <li>点击页面上的「导出 AC 题目」按钮</li>
+                  <li>将下载的 CSV 文件导入到 CPTracker（使用「从 CSV 导入」功能）</li>
+                </ol>
+
+                <div className="rounded-md bg-yellow-50 border border-yellow-200 p-3 dark:bg-yellow-900/20 dark:border-yellow-800">
+                  <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                    <span className="font-semibold">提示：</span>
+                    脚本会自动遍历所有分页并去重，保留最早的 AC 时间。
+                  </p>
+                </div>
               </div>
             )}
 
