@@ -3,7 +3,7 @@ import { useMemo, useState, useEffect } from "react";
 import { StoryContainer } from "@/components/year-review/StoryContainer";
 import { useProblems } from "@/hooks/use-problems-queries";
 import { aggregateYearReviewData } from "@/lib/year-review/data-aggregation";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuthStore } from "@/stores/auth-store";
 import { getCurrentUserProfile, type UserProfile } from "@/lib/supabase/profiles";
 import { getEmailHash } from "@/lib/gravatar";
 
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/year-review")({
 
 function YearReview() {
   const { problems, isLoading } = useProblems();
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const navigate = useNavigate();
 

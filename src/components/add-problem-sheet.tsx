@@ -24,6 +24,7 @@ import { Add01Icon } from "@hugeicons/core-free-icons";
 import type { SolvedProblem } from "@/data/mock";
 import { extractProblemInfo } from "@/lib/problem-utils";
 import { useProblemForm } from "@/components/features/forms/hooks/use-problem-form";
+import { ProblemService } from "@/services/problem-service";
 
 interface AddProblemSheetProps {
   onAdd: (problem: Omit<SolvedProblem, "id">) => Promise<boolean>;
@@ -146,9 +147,9 @@ export function AddProblemSheet({ onAdd, open: controlledOpen, onOpenChange }: A
             <Input
               id="date"
               type="datetime-local"
-              value={form.formData.日期.slice(0, 16).replace(/\//g, "-").replace(" ", "T")}
+              value={ProblemService.formatDateForInput(form.formData.日期)}
               onChange={(e) =>
-                form.handleChange("日期", e.target.value.replace(/-/g, "/").replace("T", " ") + ":00")
+                form.handleChange("日期", ProblemService.formatInputToDate(e.target.value))
               }
             />
           </div>

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Info, Upload, Download } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuthStore } from "@/stores/auth-store";
 import { fetchAllProblems } from "@/lib/supabase/database";
 
 interface DataTransferSectionProps {
@@ -21,7 +21,7 @@ export function DataTransferSection({
   onDownloadClick,
   isSyncing = false,
 }: DataTransferSectionProps) {
-  const { user, storageMode } = useAuth();
+  const { user, storageMode } = useAuthStore();
   const [cloudProblemCount, setCloudProblemCount] = useState<number | null>(null);
   const [isLoadingCount, setIsLoadingCount] = useState(false);
 

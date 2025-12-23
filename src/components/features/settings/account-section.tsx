@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { LogOut, Info, ExternalLink } from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuthStore } from "@/stores/auth-store";
 
 export function AccountSection() {
-  const { user, signOut, setStorageMode } = useAuth();
+  const { user, signOut, setStorageMode } = useAuthStore();
 
   const handleSignOut = async () => {
     await signOut();

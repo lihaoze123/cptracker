@@ -3,18 +3,41 @@
  * Extracted from components to improve testability and reusability
  */
 
+// Import utility functions from specialized services
+import {
+  normalizeTags,
+  normalizeTagsString,
+  parseTagString,
+  tagsToString,
+  isValidTag,
+} from './tag-service';
+import {
+  formatDateForInput,
+  formatInputToDate,
+  formatDateDisplay,
+  isValidDate,
+} from './date-service';
+
 export class ProblemService {
   /**
    * Normalize tags by replacing Chinese separators and trimming whitespace
+   * @deprecated Use normalizeTagsString from tag-service instead
    */
   static normalizeTags(tags: string): string {
-    return tags
-      .replace(/[，、]/g, ',')
-      .split(/[,\s]+/)
-      .map((t) => t.trim())
-      .filter(Boolean)
-      .join(', ');
+    return normalizeTagsString(tags);
   }
+
+  // Re-export tag utility methods as static methods for convenience
+  static normalizeTagsArray = normalizeTags;
+  static parseTagString = parseTagString;
+  static tagsToString = tagsToString;
+  static isValidTag = isValidTag;
+
+  // Re-export date utility methods as static methods for convenience
+  static formatDateForInput = formatDateForInput;
+  static formatInputToDate = formatInputToDate;
+  static formatDateDisplay = formatDateDisplay;
+  static isValidDate = isValidDate;
 
   /**
    * Validate problem URL
@@ -57,20 +80,6 @@ export class ProblemService {
   }
 
   /**
-   * Format date for datetime-local input (HTML5 format)
-   */
-  static formatDateForInput(dateStr: string): string {
-    return dateStr.slice(0, 16).replace(/\//g, '-').replace(' ', 'T');
-  }
-
-  /**
-   * Format input datetime back to our storage format
-   */
-  static formatInputToDate(input: string): string {
-    return input.replace(/-/g, '/').replace('T', ' ') + ':00';
-  }
-
-  /**
    * Parse problem URL to extract OJ and problem ID
    */
   static parseProblemUrl(url: string): { oj: string; problemId: string } | null {
@@ -102,3 +111,18 @@ export class ProblemService {
     }
   }
 }
+
+// Also export utility functions for direct import
+export {
+  normalizeTags,
+  normalizeTagsString,
+  parseTagString,
+  tagsToString,
+  isValidTag,
+} from './tag-service';
+export {
+  formatDateForInput,
+  formatInputToDate,
+  formatDateDisplay,
+  isValidDate,
+} from './date-service';

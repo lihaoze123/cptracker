@@ -1,13 +1,11 @@
-export interface SolvedProblem {
-  id: number;
-  题目: string;
-  题目名称?: string;
-  难度?: string;
-  题解: string;
-  关键词: string;
-  日期: string;
-  supabase_id?: string;
-}
+/**
+ * Mock data for development and testing
+ */
+
+import type { SolvedProblem } from "@/types/domain.types";
+
+// 重新导出类型以保持向后兼容
+export type { SolvedProblem } from "@/types/domain.types";
 
 export const mockProblems: SolvedProblem[] = [
   {

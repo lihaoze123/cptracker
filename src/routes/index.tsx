@@ -8,10 +8,10 @@ import {
 } from "@/components/problem-heatmaps";
 import { CSVToolbar } from "@/components/csv-toolbar";
 import { OJImport } from "@/components/oj-import";
-import { SettingsSheet } from "@/components/settings-sheet";
+import { SettingsSheet } from "@/components/features/settings/settings-sheet";
 import { StorageModeBadge } from "@/components/storage-mode-badge";
 import { useProblems } from "@/hooks/use-problems-queries";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuthStore } from "@/stores/auth-store";
 import type { SolvedProblem } from "@/data/mock";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
@@ -64,7 +64,7 @@ function Dashboard() {
     downloadCloudToLocal,
   } = useProblems();
 
-  const { user } = useAuth();
+  const { user } = useAuthStore();
 
   const handleAddProblem = async (problem: Omit<SolvedProblem, "id">) => {
     return await addProblems([problem]);

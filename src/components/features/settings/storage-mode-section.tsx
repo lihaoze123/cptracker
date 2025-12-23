@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Cloud, HardDrive, Info } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuthStore } from "@/stores/auth-store";
 import type { StorageMode } from "@/lib/storage-mode";
 
 interface StorageModeSectionProps {
@@ -21,7 +21,7 @@ interface StorageModeSectionProps {
 }
 
 export function StorageModeSection({ onLoginRequired }: StorageModeSectionProps) {
-  const { storageMode, setStorageMode, user } = useAuth();
+  const { storageMode, setStorageMode, user } = useAuthStore();
 
   const handleStorageModeChange = (value: StorageMode) => {
     if (value === "cloud" && !user) {

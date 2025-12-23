@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuthStore } from "@/stores/auth-store";
 import { StorageModeSection } from "./storage-mode-section";
 import { AccountSection } from "./account-section";
 import { ProfileSection } from "./profile-section";
@@ -32,7 +32,7 @@ export function SettingsSheet({
   onDownloadFromCloud,
   isSyncing = false,
 }: SettingsSheetProps) {
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [showSyncDialog, setShowSyncDialog] = useState<"upload" | "download" | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);

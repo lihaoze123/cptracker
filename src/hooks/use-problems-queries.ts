@@ -17,13 +17,13 @@ import {
   toLocalProblem,
 } from "@/lib/supabase/database";
 import { mockProblems, type SolvedProblem } from "@/data/mock";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuthStore } from "@/stores/auth-store";
 
 const PROBLEMS_QUERY_KEY = ["problems"] as const;
 
 // Main hook that provides all problems data and mutations
 export function useProblems() {
-  const { storageMode, user } = useAuth();
+  const { storageMode, user } = useAuthStore();
   const queryClient = useQueryClient();
   const isCloudMode = storageMode === "cloud" && user !== null;
 

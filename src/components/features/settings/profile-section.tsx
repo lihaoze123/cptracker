@@ -10,13 +10,13 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Globe, Info, Copy, Check } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuthStore } from "@/stores/auth-store";
 import { getCurrentUserProfile, updateProfile, isUsernameAvailable, type UserProfile } from "@/lib/supabase/profiles";
 import { getEmailHash } from "@/lib/gravatar";
 import { useToast } from "@/hooks/use-toast";
 
 export function ProfileSection() {
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   const { toast } = useToast();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);

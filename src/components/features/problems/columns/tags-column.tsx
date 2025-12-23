@@ -5,10 +5,12 @@
 import { memo } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Row } from "@tanstack/react-table";
+import type { Table } from "@tanstack/react-table";
 import type { SolvedProblem } from "@/data/mock";
 import { Badge } from "@/components/ui/badge";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { Tags, Star } from "lucide-react";
+import { ProblemService } from "@/services/problem-service";
 
 interface TagBadgeProps {
   tag: string;
@@ -40,7 +42,7 @@ const TagBadge = memo(function TagBadge({ tag, isFavorited, onClick }: TagBadgeP
   );
 });
 
-function handleTagClick(e: React.MouseEvent, table: any, tag: string) {
+function handleTagClick(e: React.MouseEvent, table: Table<SolvedProblem>, tag: string) {
   e.stopPropagation();
   const tagsColumn = table.getColumn("tags");
   if (tagsColumn) {

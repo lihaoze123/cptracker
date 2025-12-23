@@ -1,5 +1,6 @@
 import Papa from "papaparse";
 import type { SolvedProblem } from "@/data/mock";
+import { ProblemService } from "@/services/problem-service";
 
 export interface CSVExportOptions {
   problems: SolvedProblem[];
@@ -70,13 +71,8 @@ export function parseCSV(file: File): Promise<CSVImportResult> {
             return;
           }
 
-          // 统一处理标签分隔符：全角逗号、顿号、半角逗号、空格 → 半角逗号
-          const normalizedTags = (row.关键词?.trim() || "")
-            .replace(/[，、]/g, ",")
-            .split(/[,\s]+/)
-            .map((t) => t.trim())
-            .filter(Boolean)
-            .join(", ");
+          // 使用统一的标签服务规范化标签
+          const normalizedTags = ProblemService.normalizeTags(row.关键词?.trim() || "");
 
           success.push({
             题目: row.题目.trim(),
