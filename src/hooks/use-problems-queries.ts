@@ -47,6 +47,15 @@ export function useProblems() {
     },
   });
 
+  // Create Map for O(1) lookups instead of O(n) find()
+  const problemMap = useMemo(() => {
+    const map = new Map<number, SolvedProblem & { supabase_id?: string }>();
+    problems.forEach((problem) => {
+      map.set(problem.id, problem as SolvedProblem & { supabase_id?: string });
+    });
+    return map;
+  }, [problems]);
+
   // Add problems mutation
   const addProblemsMutation = useMutation({
     mutationFn: async (newProblems: Omit<SolvedProblem, "id">[]) => {
@@ -71,9 +80,8 @@ export function useProblems() {
       changes: Partial<SolvedProblem>;
     }) => {
       if (isCloudMode) {
-        const problem = problems.find((p) => p.id === id) as SolvedProblem & {
-          supabase_id?: string;
-        };
+        // O(1) lookup instead of O(n) find()
+        const problem = problemMap.get(id);
         if (problem?.supabase_id) {
           await updateProblemById(problem.supabase_id, changes);
         }
@@ -90,9 +98,8 @@ export function useProblems() {
   const deleteProblemMutation = useMutation({
     mutationFn: async (id: number) => {
       if (isCloudMode) {
-        const problem = problems.find((p) => p.id === id) as SolvedProblem & {
-          supabase_id?: string;
-        };
+        // O(1) lookup instead of O(n) find()
+        const problem = problemMap.get(id);
         if (problem?.supabase_id) {
           await deleteProblemById(problem.supabase_id);
         }
@@ -109,13 +116,9 @@ export function useProblems() {
   const deleteProblemsMutation = useMutation({
     mutationFn: async (ids: number[]) => {
       if (isCloudMode) {
+        // O(1) lookup per item instead of O(n)
         const supabaseIds = ids
-          .map((id) => {
-            const problem = problems.find((p) => p.id === id) as SolvedProblem & {
-              supabase_id?: string;
-            };
-            return problem?.supabase_id;
-          })
+          .map((id) => problemMap.get(id)?.supabase_id)
           .filter(Boolean) as string[];
         await Promise.all(supabaseIds.map((id) => deleteProblemById(id)));
       } else {

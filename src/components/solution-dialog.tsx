@@ -18,6 +18,35 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
+/**
+ * Type for router state with optional solution param
+ * Used for type-safe access to solution search param
+ */
+interface RouterStateWithSolution {
+  solution?: string;
+}
+
+/**
+ * Type-safe function to update search params with solution.
+ * Note: TanStack Router's search param types are route-specific.
+ * This component is used across multiple routes, and TypeScript
+ * cannot express cross-route navigation. The runtime behavior is correct.
+ */
+function updateSolutionParam(
+  prev: Record<string, unknown>,
+  solutionId: string,
+  add: boolean
+): Record<string, unknown> {
+  const search = prev as RouterStateWithSolution;
+  const next = { ...prev };
+  if (add) {
+    next.solution = solutionId;
+  } else if (search.solution === solutionId) {
+    delete next.solution;
+  }
+  return next;
+}
+
 export function SolutionContent({ solution }: { solution: string }) {
   return (
     <ReactMarkdown
@@ -74,8 +103,8 @@ export function SolutionDialog({
   const router = useRouter();
   const activeSolutionId = useRouterState({
     select: (state) => {
-      const current = (state.location.search as { solution?: string }).solution;
-      return typeof current === "string" ? current : undefined;
+      const search = state.location.search as RouterStateWithSolution;
+      return typeof search.solution === "string" ? search.solution : undefined;
     },
   });
   const [localOpen, setLocalOpen] = useState(false);
@@ -96,16 +125,9 @@ export function SolutionDialog({
   const handleOpenChange = (nextOpen: boolean) => {
     if (solutionId) {
       navigate({
-        // Typed as any to allow use outside a specific route context
-        search: ((prev: Record<string, unknown>) => {
-          const nextSearch = { ...prev };
-          if (nextOpen) {
-            nextSearch.solution = solutionId;
-          } else if ((prev as { solution?: string }).solution === solutionId) {
-            delete nextSearch.solution;
-          }
-          return nextSearch;
-        }) as any,
+        // @ts-ignore - TanStack Router cannot express cross-route search param navigation
+        // This component is used in both "/" and "/$username" routes
+        search: (prev) => updateSolutionParam(prev, solutionId, nextOpen) as any,
         replace: true,
       });
     }

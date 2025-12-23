@@ -2,17 +2,12 @@ import {
   createContext,
   useContext,
   useEffect,
-  useState,
-  useCallback,
   type ReactNode,
 } from "react";
 import type { User, Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import {
-  getStorageMode,
-  setStorageMode,
-  type StorageMode,
-} from "@/lib/storage-mode";
+import { setStorageMode, type StorageMode } from "@/lib/storage-mode";
+import { useAuthStore } from "@/stores/auth-store";
 
 interface AuthContextType {
   user: User | null;
@@ -25,40 +20,44 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * AuthProvider now acts as a thin wrapper around Zustand store.
+ * The actual state is managed in useAuthStore, this provider handles:
+ * - Supabase auth state synchronization
+ * - Initial session loading
+ * - Sign out functionality
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [storageMode, setStorageModeState] = useState<StorageMode>(
-    getStorageMode()
-  );
+  // Use Zustand store as the single source of truth
+  const { user, session, isLoading, storageMode, setStorageMode: setStoreStorageMode, signOut: storeSignOut } = useAuthStore();
 
   const supabase = createClient();
 
   useEffect(() => {
-    // 获取初始会话
+    // Initialize auth state from Supabase
     const initAuth = async () => {
       try {
         const {
           data: { session: initialSession },
         } = await supabase.auth.getSession();
-        setSession(initialSession);
-        setUser(initialSession?.user ?? null);
+
+        // Update Zustand store with initial session
+        useAuthStore.getState().setSession(initialSession);
+        useAuthStore.getState().setLoading(false);
       } catch {
-        // 忽略错误，用户未登录
-      } finally {
-        setIsLoading(false);
+        // Ignore errors, user not logged in
+        useAuthStore.getState().setLoading(false);
       }
     };
 
     initAuth();
 
-    // 监听认证状态变化
+    // Listen for auth state changes and update Zustand store
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
+      useAuthStore.getState().setSession(newSession);
+      useAuthStore.getState().setLoading(false);
     });
 
     return () => {
@@ -66,16 +65,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [supabase.auth]);
 
-  const handleSetStorageMode = useCallback((mode: StorageMode) => {
+  const handleSetStorageMode = (mode: StorageMode) => {
     setStorageMode(mode);
-    setStorageModeState(mode);
-  }, []);
+    setStoreStorageMode(mode);
+  };
 
-  const signOut = useCallback(async () => {
+  const signOut = async () => {
     await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-  }, [supabase.auth]);
+    storeSignOut();
+  };
 
   return (
     <AuthContext.Provider

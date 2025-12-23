@@ -1,11 +1,13 @@
-import { useState, useEffect, useMemo } from "react";
+/**
+ * Edit Problem Sheet Component
+ * Form for editing existing problems
+ */
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TagsInput } from "@/components/tags-input";
-import { useProblems } from "@/hooks/use-problems-queries";
-import { extractProblemInfo } from "@/lib/problem-utils";
 import {
   Sheet,
   SheetClose,
@@ -16,6 +18,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import type { SolvedProblem } from "@/data/mock";
+import { extractProblemInfo } from "@/lib/problem-utils";
+import { useProblemForm } from "@/components/features/forms/hooks/use-problem-form";
 
 interface EditProblemSheetProps {
   problem: SolvedProblem | null;
@@ -30,99 +34,26 @@ export function EditProblemSheet({
   onOpenChange,
   onEdit,
 }: EditProblemSheetProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    题目: "",
-    题目名称: "",
-    难度: "",
-    题解: "",
-    关键词: "",
-    日期: "",
+  const form = useProblemForm({
+    mode: "edit",
+    initialProblem: problem,
+    onSubmit: async (changes) => {
+      if (!problem) return false;
+      const success = await onEdit(problem.id, changes);
+      if (success) {
+        onOpenChange(false);
+      }
+      return success;
+    },
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const { allTags } = useProblems();
 
   // 自动解析链接，显示预览
   const parsedProblem = useMemo(() => {
-    const text = formData.题目.trim();
+    const text = form.formData.题目.trim();
     if (!text) return null;
     const info = extractProblemInfo(text);
     return info.isURL ? info : null;
-  }, [formData.题目]);
-
-  // 当 problem 变化或 Sheet 打开时更新表单数据
-  useEffect(() => {
-    if (problem && open) {
-      setFormData({
-        题目: problem.题目,
-        题目名称: problem.题目名称 || "",
-        难度: problem.难度 || "",
-        题解: problem.题解,
-        关键词: problem.关键词,
-        日期: problem.日期,
-      });
-      setErrors({});
-    }
-  }, [problem, open]);
-
-  const validate = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.题目.trim()) {
-      newErrors.题目 = "题目链接不能为空";
-    } else {
-      try {
-        new URL(formData.题目);
-      } catch {
-        newErrors.题目 = "请输入有效的 URL";
-      }
-    }
-
-    if (formData.难度.trim() && !/^\d+$/.test(formData.难度)) {
-      newErrors.难度 = "难度必须是数字";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async () => {
-    if (!validate() || !problem) return;
-
-    setIsSubmitting(true);
-    try {
-      // 统一处理标签分隔符：全角逗号、半角逗号、空格 → 半角逗号
-      const normalizedTags = formData.关键词
-        .replace(/[，、]/g, ",")
-        .split(/[,\s]+/)
-        .map((t) => t.trim())
-        .filter(Boolean)
-        .join(", ");
-
-      const success = await onEdit(problem.id, {
-        题目: formData.题目.trim(),
-        题目名称: formData.题目名称.trim() || undefined,
-        难度: formData.难度.trim() || undefined,
-        题解: formData.题解.trim(),
-        关键词: normalizedTags,
-        日期: formData.日期,
-      });
-
-      if (success) {
-        setErrors({});
-        onOpenChange(false);
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleChange = (field: keyof typeof formData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
-  };
+  }, [form.formData.题目]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -142,16 +73,16 @@ export function EditProblemSheet({
             <Textarea
               id="edit-problem-url"
               placeholder="https://codeforces.com/contest/1234/problem/A"
-              value={formData.题目}
-              onChange={(e) => handleChange("题目", e.target.value)}
+              value={form.formData.题目}
+              onChange={(e) => form.handleChange("题目", e.target.value)}
             />
             {parsedProblem && (
               <p className="text-xs text-muted-foreground">
                 {parsedProblem.source}: <span className="font-medium text-foreground">{parsedProblem.name}</span>
               </p>
             )}
-            {errors.题目 && (
-              <p className="text-xs text-destructive">{errors.题目}</p>
+            {form.errors.题目 && (
+              <p className="text-xs text-destructive">{form.errors.题目}</p>
             )}
           </div>
 
@@ -160,8 +91,8 @@ export function EditProblemSheet({
             <Input
               id="edit-problem-name"
               placeholder="Problem title (optional)"
-              value={formData.题目名称}
-              onChange={(e) => handleChange("题目名称", e.target.value)}
+              value={form.formData.题目名称}
+              onChange={(e) => form.handleChange("题目名称", e.target.value)}
             />
           </div>
 
@@ -173,11 +104,11 @@ export function EditProblemSheet({
               id="edit-difficulty"
               type="number"
               placeholder="1600"
-              value={formData.难度}
-              onChange={(e) => handleChange("难度", e.target.value)}
+              value={form.formData.难度}
+              onChange={(e) => form.handleChange("难度", e.target.value)}
             />
-            {errors.难度 && (
-              <p className="text-xs text-destructive">{errors.难度}</p>
+            {form.errors.难度 && (
+              <p className="text-xs text-destructive">{form.errors.难度}</p>
             )}
           </div>
 
@@ -186,17 +117,17 @@ export function EditProblemSheet({
             <Textarea
               id="edit-solution"
               placeholder="支持 Markdown 语法和数学公式"
-              value={formData.题解}
-              onChange={(e) => handleChange("题解", e.target.value)}
+              value={form.formData.题解}
+              onChange={(e) => form.handleChange("题解", e.target.value)}
             />
           </div>
 
           <div className="grid gap-2">
             <Label htmlFor="edit-tags">Tags</Label>
             <TagsInput
-              value={formData.关键词}
-              onChange={(value) => handleChange("关键词", value)}
-              suggestions={allTags}
+              value={form.formData.关键词}
+              onChange={(value) => form.handleChange("关键词", value)}
+              suggestions={form.allTags}
               placeholder="Add tags..."
             />
           </div>
@@ -206,17 +137,17 @@ export function EditProblemSheet({
             <Input
               id="edit-date"
               type="datetime-local"
-              value={formData.日期.slice(0, 16).replace(/\//g, "-").replace(" ", "T")}
+              value={form.formData.日期.slice(0, 16).replace(/\//g, "-").replace(" ", "T")}
               onChange={(e) =>
-                handleChange("日期", e.target.value.replace(/-/g, "/").replace("T", " ") + ":00")
+                form.handleChange("日期", e.target.value.replace(/-/g, "/").replace("T", " ") + ":00")
               }
             />
           </div>
         </div>
 
         <SheetFooter>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Save Changes"}
+          <Button onClick={() => form.handleSubmit()} disabled={form.isSubmitting}>
+            {form.isSubmitting ? "Saving..." : "Save Changes"}
           </Button>
           <SheetClose asChild>
             <Button variant="outline">Cancel</Button>

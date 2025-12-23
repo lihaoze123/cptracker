@@ -5,6 +5,7 @@
 
 import { createClient } from "./client";
 import type { SupabaseProblem } from "./database";
+import { isSupabaseError } from "@/types/error.types";
 
 export interface UserProfile {
   id: string;
@@ -155,7 +156,7 @@ export async function getPublicSolutionByUsername(
     .single();
 
   if (error) {
-    if ((error as { code?: string }).code === "PGRST116") {
+    if (isSupabaseError(error) && error.code === "PGRST116") {
       throw new Error("Solution not found");
     }
     throw error;
@@ -165,5 +166,5 @@ export async function getPublicSolutionByUsername(
     throw new Error("Solution not found");
   }
 
-  return { profile, problem: data as SupabaseProblem };
+  return { profile, problem: data };
 }
