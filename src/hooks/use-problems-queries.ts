@@ -14,10 +14,10 @@ import {
   updateProblemById,
   deleteProblemById,
   deleteAllUserProblems,
-  toLocalProblem,
 } from "@/lib/supabase/database";
 import { mockProblems, type SolvedProblem } from "@/data/mock";
 import { useAuthStore } from "@/stores/auth-store";
+import type { ProblemInput, ProblemUpdate } from "@/types/domain.types";
 
 const PROBLEMS_QUERY_KEY = ["problems"] as const;
 
@@ -37,9 +37,8 @@ export function useProblems() {
     queryKey: [...PROBLEMS_QUERY_KEY, isCloudMode ? "cloud" : "local"],
     queryFn: async () => {
       if (isCloudMode) {
-        // Cloud mode: fetch from Supabase
-        const cloudProblems = await fetchAllProblems();
-        return cloudProblems.map((p, idx) => toLocalProblem(p, idx + 1));
+        // Cloud mode: fetch from Supabase (already returns SolvedProblem[])
+        return await fetchAllProblems();
       } else {
         // Local mode: fetch from IndexedDB
         return await getAllProblems();
@@ -58,7 +57,7 @@ export function useProblems() {
 
   // Add problems mutation
   const addProblemsMutation = useMutation({
-    mutationFn: async (newProblems: Omit<SolvedProblem, "id">[]) => {
+    mutationFn: async (newProblems: ProblemInput[]) => {
       if (isCloudMode) {
         await insertProblems(newProblems);
       } else {
@@ -77,7 +76,7 @@ export function useProblems() {
       changes,
     }: {
       id: number;
-      changes: Partial<SolvedProblem>;
+      changes: ProblemUpdate;
     }) => {
       if (isCloudMode) {
         // O(1) lookup instead of O(n) find()
@@ -150,7 +149,7 @@ export function useProblems() {
       newProblems,
       clearExisting = false,
     }: {
-      newProblems: Omit<SolvedProblem, "id">[];
+      newProblems: ProblemInput[];
       clearExisting?: boolean;
     }) => {
       if (isCloudMode) {
@@ -229,7 +228,7 @@ export function useProblems() {
 
   // Wrapper functions with consistent return type
   const addProblems = useCallback(
-    async (newProblems: Omit<SolvedProblem, "id">[]) => {
+    async (newProblems: ProblemInput[]) => {
       try {
         await addProblemsMutation.mutateAsync(newProblems);
         return true;
@@ -242,7 +241,7 @@ export function useProblems() {
   );
 
   const updateProblem = useCallback(
-    async (id: number, changes: Partial<SolvedProblem>) => {
+    async (id: number, changes: ProblemUpdate) => {
       try {
         await updateProblemMutation.mutateAsync({ id, changes });
         return true;
@@ -291,7 +290,7 @@ export function useProblems() {
   }, [clearAllProblemsMutation]);
 
   const importProblems = useCallback(
-    async (newProblems: Omit<SolvedProblem, "id">[], clearExisting = false) => {
+    async (newProblems: ProblemInput[], clearExisting = false) => {
       try {
         await importProblemsMutation.mutateAsync({ newProblems, clearExisting });
         return true;
