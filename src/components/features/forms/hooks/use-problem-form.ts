@@ -13,7 +13,7 @@ interface ProblemFormData {
   难度: string;
   题解: string;
   关键词: string;
-  日期: string;
+  日期: number; // Unix timestamp in milliseconds
 }
 
 interface FormErrors {
@@ -46,7 +46,7 @@ interface UseProblemFormReturn {
   errors: FormErrors;
   isSubmitting: boolean;
   allTags: string[];
-  handleChange: (field: keyof ProblemFormData, value: string) => void;
+  handleChange: (field: keyof ProblemFormData, value: string | number) => void;
   handleSubmit: () => Promise<boolean>;
   reset?: () => void;
 }
@@ -62,7 +62,7 @@ export function useProblemForm(options: UseProblemFormOptions): UseProblemFormRe
     难度: "",
     题解: "",
     关键词: "",
-    日期: ProblemService.getUTC8DateTime(),
+    日期: ProblemService.getCurrentTimestamp(),
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,12 +81,12 @@ export function useProblemForm(options: UseProblemFormOptions): UseProblemFormRe
       });
       setErrors({});
     } else if (onSheetOpen && mode === "add") {
-      // Update time when opening add sheet
-      setFormData((prev) => ({ ...prev, 日期: ProblemService.getUTC8DateTime() }));
+      // Update timestamp when opening add sheet
+      setFormData((prev) => ({ ...prev, 日期: ProblemService.getCurrentTimestamp() }));
     }
   }, [initialProblem, onSheetOpen, mode]);
 
-  const handleChange = useCallback((field: keyof ProblemFormData, value: string) => {
+  const handleChange = useCallback((field: keyof ProblemFormData, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
@@ -145,7 +145,7 @@ export function useProblemForm(options: UseProblemFormOptions): UseProblemFormRe
       难度: "",
       题解: "",
       关键词: "",
-      日期: ProblemService.getUTC8DateTime(),
+      日期: ProblemService.getCurrentTimestamp(),
     });
     setErrors({});
   }, []);

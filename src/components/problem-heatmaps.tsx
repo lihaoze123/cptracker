@@ -10,6 +10,7 @@ import {
 import { Heatmap } from "@/components/ui/heatmap";
 import type { SolvedProblem } from "@/data/mock";
 import { getProblemDisplayName } from "@/lib/problem-utils";
+import { timestampToDateOnly } from "@/services/date-service";
 
 interface ProblemHeatmapsProps {
   problems: SolvedProblem[];
@@ -29,9 +30,9 @@ interface DayProblemMeta {
   }>;
 }
 
-function parseDate(dateStr: string): string {
-  // Convert yyyy/mm/dd or yyyy-mm-dd to yyyy-mm-dd for HeatMap compatibility
-  return dateStr.split(" ")[0].replace(/\//g, "-");
+function parseDate(timestamp: number): string {
+  // Convert timestamp to yyyy-mm-dd for HeatMap compatibility
+  return timestampToDateOnly(timestamp);
 }
 
 function getYearStartDate(year: number): Date {
@@ -48,8 +49,8 @@ function getAvailableYears(problems: SolvedProblem[]): number[] {
   years.add(currentYear);
 
   problems.forEach((p) => {
-    const date = parseDate(p.日期);
-    const year = parseInt(date.split("-")[0], 10);
+    const date = new Date(p.日期);
+    const year = date.getFullYear();
     if (!isNaN(year)) {
       years.add(year);
     }

@@ -147,9 +147,9 @@ export function AddProblemSheet({ onAdd, open: controlledOpen, onOpenChange }: A
             <Input
               id="date"
               type="datetime-local"
-              value={ProblemService.formatDateForInput(form.formData.日期)}
+              value={ProblemService.timestampToInputDate(form.formData.日期)}
               onChange={(e) =>
-                form.handleChange("日期", ProblemService.formatInputToDate(e.target.value))
+                form.handleChange("日期", ProblemService.inputDateToTimestamp(e.target.value))
               }
             />
           </div>

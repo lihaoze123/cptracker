@@ -12,9 +12,10 @@ import {
   isValidTag,
 } from './tag-service';
 import {
-  formatDateForInput,
-  formatInputToDate,
-  formatDateDisplay,
+  timestampToInputDate,
+  inputDateToTimestamp,
+  formatTimestamp,
+  getCurrentTimestamp,
   isValidDate,
 } from './date-service';
 
@@ -34,9 +35,10 @@ export class ProblemService {
   static isValidTag = isValidTag;
 
   // Re-export date utility methods as static methods for convenience
-  static formatDateForInput = formatDateForInput;
-  static formatInputToDate = formatInputToDate;
-  static formatDateDisplay = formatDateDisplay;
+  static timestampToInputDate = timestampToInputDate;
+  static inputDateToTimestamp = inputDateToTimestamp;
+  static formatTimestamp = formatTimestamp;
+  static getCurrentTimestamp = getCurrentTimestamp;
   static isValidDate = isValidDate;
 
   /**
@@ -66,17 +68,12 @@ export class ProblemService {
   }
 
   /**
-   * Get current UTC+8 datetime as a formatted string
+   * Get current timestamp
+   * @deprecated Use getCurrentTimestamp instead
    */
   static getUTC8DateTime(): string {
-    const now = new Date();
-    const utc8 = new Date(now.getTime() + 8 * 60 * 60 * 1000);
-    const iso = utc8.toISOString();
-    const year = iso.slice(0, 4);
-    const month = iso.slice(5, 7);
-    const day = iso.slice(8, 10);
-    const time = iso.slice(11, 19);
-    return `${year}/${month}/${day} ${time}`;
+    // This method is deprecated, kept for backward compatibility
+    return getCurrentTimestamp().toString();
   }
 
   /**
@@ -121,8 +118,9 @@ export {
   isValidTag,
 } from './tag-service';
 export {
-  formatDateForInput,
-  formatInputToDate,
-  formatDateDisplay,
+  timestampToInputDate,
+  inputDateToTimestamp,
+  formatTimestamp,
+  getCurrentTimestamp,
   isValidDate,
 } from './date-service';

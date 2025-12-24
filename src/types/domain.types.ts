@@ -14,7 +14,7 @@ export interface SolvedProblem {
   难度?: string;
   题解: string;
   关键词: string;
-  日期: string;
+  日期: number; // Unix timestamp in milliseconds (UTC)
   supabase_id?: string;
 }
 

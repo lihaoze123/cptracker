@@ -7,21 +7,20 @@ import type { SolvedProblem } from "@/data/mock";
 import type { VelocityDataPoint } from "@/lib/year-review/types";
 
 /**
- * 解析日期字符串
+ * 从时间戳创建 Date 对象
  */
-function parseDate(dateStr: string): Date | null {
-  const date = new Date(dateStr);
+function parseDate(timestamp: number): Date | null {
+  const date = new Date(timestamp);
   return isNaN(date.getTime()) ? null : date;
 }
 
 /**
- * 从日期字符串中提取小时: "2025-04-02 09:10:00" → 9
+ * 从时间戳中提取小时
  */
-function extractHour(dateStr: string): number {
-  const timePart = dateStr.split(" ")[1]; // "09:10:00"
-  if (!timePart) return -1;
-  const hour = parseInt(timePart.split(":")[0], 10);
-  return isNaN(hour) ? -1 : hour;
+function extractHour(timestamp: number): number {
+  const date = new Date(timestamp);
+  if (isNaN(date.getTime())) return -1;
+  return date.getHours();
 }
 
 /**

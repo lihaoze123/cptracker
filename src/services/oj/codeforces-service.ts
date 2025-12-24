@@ -37,8 +37,8 @@ export async function fetchCodeforces(handle: string): Promise<SolvedProblem[]> 
   let id = 1;
 
   for (const submission of solvedMap.values()) {
-    const date = new Date(submission.creationTimeSeconds * 1000);
-    const dateStr = date.toISOString().replace("T", " ").slice(0, 19);
+    // Convert Unix timestamp (seconds) to milliseconds
+    const timestamp = submission.creationTimeSeconds * 1000;
 
     problems.push({
       id: id++,
@@ -47,7 +47,7 @@ export async function fetchCodeforces(handle: string): Promise<SolvedProblem[]> 
       难度: submission.problem.rating?.toString(),
       题解: "",
       关键词: submission.problem.tags.join(", "),
-      日期: dateStr,
+      日期: timestamp,
     });
   }
 

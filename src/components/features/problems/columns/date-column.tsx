@@ -7,17 +7,7 @@ import type { Row } from "@tanstack/react-table";
 import type { SolvedProblem } from "@/data/mock";
 import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 import { Calendar } from "lucide-react";
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import { formatTimestamp } from "@/services/date-service";
 
 export function DateColumn(): ColumnDef<SolvedProblem> {
   return {
@@ -28,7 +18,7 @@ export function DateColumn(): ColumnDef<SolvedProblem> {
     ),
     cell: ({ row }) => (
       <span className="text-muted-foreground whitespace-nowrap">
-        {formatDate(row.getValue("date"))}
+        {formatTimestamp(row.getValue("date"), "zh-CN", true)}
       </span>
     ),
     filterFn: (row: Row<SolvedProblem>, _id: string, filterValue: Date | [Date, Date]) => {

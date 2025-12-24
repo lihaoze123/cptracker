@@ -67,8 +67,8 @@ export function aggregateYearReviewData(
   } = require("@/services/analytics");
 
   // 解析日期
-  function parseDate(dateStr: string): Date | null {
-    const date = new Date(dateStr);
+  function parseDate(timestamp: number): Date | null {
+    const date = new Date(timestamp);
     return isNaN(date.getTime()) ? null : date;
   }
 

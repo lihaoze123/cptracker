@@ -76,8 +76,8 @@ export async function fetchAtCoder(handle: string): Promise<SolvedProblem[]> {
   let id = 1;
 
   for (const submission of solvedMap.values()) {
-    const date = new Date(submission.epoch_second * 1000);
-    const dateStr = date.toISOString().replace("T", " ").slice(0, 19);
+    // Convert Unix timestamp (seconds) to milliseconds
+    const timestamp = submission.epoch_second * 1000;
 
     // 获取难度并转换为 CF 等级
     const model = problemModels[submission.problem_id];
@@ -98,7 +98,7 @@ export async function fetchAtCoder(handle: string): Promise<SolvedProblem[]> {
       难度: difficultyStr || undefined,
       题解: "",
       关键词: "",
-      日期: dateStr,
+      日期: timestamp,
     });
   }
 

@@ -1,5 +1,8 @@
 -- Supabase Schema for CPTracker
 -- Run this SQL in your Supabase SQL Editor
+--
+-- NOTE: After applying this schema, run migrate_date_to_timestamp.sql
+-- to convert existing date strings to timestamps.
 
 -- ============================================
 -- Profiles Table (User Information)
@@ -65,7 +68,7 @@ CREATE TABLE IF NOT EXISTS problems (
   "难度" TEXT,
   "题解" TEXT DEFAULT '',
   "关键词" TEXT DEFAULT '',
-  "日期" TEXT NOT NULL,
+  "日期" BIGINT NOT NULL,  -- Unix timestamp in milliseconds (UTC)
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );

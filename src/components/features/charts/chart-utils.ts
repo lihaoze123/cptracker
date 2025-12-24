@@ -26,8 +26,8 @@ export const difficultyChartConfig: ChartConfig = DIFFICULTY_LABELS.reduce(
   {} as ChartConfig
 );
 
-export function parseDate(dateStr: string): Date {
-  return new Date(dateStr.split(" ")[0].replace(/\//g, "-"));
+export function parseDate(timestamp: number): Date {
+  return new Date(timestamp);
 }
 
 export function filterProblemsByTimeRange(

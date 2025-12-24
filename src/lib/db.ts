@@ -6,6 +6,7 @@ import {
   toLocalDBUpdate,
 } from "@/lib/mappers/problem-mapper";
 import type { ProblemInput, ProblemUpdate, SolvedProblem } from "@/types/domain.types";
+import { legacyDateStringToTimestamp } from "@/services/date-service";
 
 /**
  * IndexedDB 存储模型
@@ -17,6 +18,19 @@ const db = new Dexie("ProblemsDB") as Dexie & {
   problems: EntityTable<StoredProblem, "id">;
 };
 
+// Version 4: 日期字段从字符串改为时间戳（毫秒）
+db.version(4).stores({
+  problems: "++id, 难度, 日期, 题目名称, syncedAt, supabase_id, pending_sync, pending_delete",
+}).upgrade(async (tx) => {
+  // 迁移版本 3 到版本 4：将字符串日期转换为时间戳
+  await tx.table("problems").toCollection().modify((problem) => {
+    if (typeof problem.日期 === "string") {
+      problem.日期 = legacyDateStringToTimestamp(problem.日期);
+    }
+  });
+});
+
+// Version 3: 原有版本
 db.version(3).stores({
   problems: "++id, 难度, 日期, 题目名称, syncedAt, supabase_id, pending_sync, pending_delete",
 });

@@ -7,8 +7,8 @@ export interface ProblemStats {
   yearly: number;
 }
 
-function parseProblemDate(dateStr: string): Date | null {
-  const date = new Date(dateStr);
+function parseProblemDate(timestamp: number): Date | null {
+  const date = new Date(timestamp);
   return isNaN(date.getTime()) ? null : date;
 }
 

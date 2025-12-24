@@ -13,7 +13,7 @@ export interface LocalDBProblem {
   难度?: string;
   题解: string;
   关键词: string;
-  日期: string;
+  日期: number; // Unix timestamp in milliseconds (UTC)
   syncedAt: number;
   supabase_id?: string;
   pending_sync?: boolean;
@@ -31,7 +31,7 @@ export interface SupabaseProblemDB {
   难度?: string;
   题解: string;
   关键词: string;
-  日期: string;
+  日期: number; // Unix timestamp in milliseconds (UTC)
   created_at: string;
   updated_at: string;
 }
@@ -45,7 +45,7 @@ export interface SupabaseProblemCreate {
   难度?: string;
   题解: string;
   关键词: string;
-  日期: string;
+  日期: number; // Unix timestamp in milliseconds (UTC)
 }
 
 /**
@@ -57,6 +57,6 @@ export interface SupabaseProblemUpdate {
   难度?: string;
   题解?: string;
   关键词?: string;
-  日期?: string;
+  日期?: number; // Unix timestamp in milliseconds (UTC)
   updated_at: string;
 }

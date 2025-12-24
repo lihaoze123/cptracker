@@ -78,10 +78,10 @@ function normalizeLuoguRecords(
   return Array.isArray(records) ? records : Object.values(records);
 }
 
-function formatTimestamp(seconds: number): string {
+function formatTimestamp(seconds: number): number {
+  // Convert to milliseconds if needed (Luogu timestamps may be in seconds or milliseconds)
   const millis = seconds > 1e12 ? seconds : seconds * 1000;
-  const date = new Date(millis);
-  return date.toISOString().replace("T", " ").slice(0, 19);
+  return millis;
 }
 
 function luoguDifficultyToCfRating(
@@ -244,7 +244,7 @@ export async function fetchLuogu(handle: string): Promise<SolvedProblem[]> {
       难度: luoguDifficultyToCfRating(record.problem.difficulty),
       题解: "",
       关键词: "",
-      日期: formatTimestamp(record.submitTime),
+      日期: formatTimestamp(record.submitTime), // Already returns timestamp in milliseconds
     }));
 
   return problems;
