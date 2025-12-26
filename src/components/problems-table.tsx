@@ -2,7 +2,7 @@
  * Problems Table Component
  * Main data table component with filtering, sorting, and pagination
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { SortingState, ColumnFiltersState, VisibilityState, RowSelectionState } from "@tanstack/react-table";
 import { useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, getFacetedRowModel, getFacetedUniqueValues } from "@tanstack/react-table";
 import type { SolvedProblem } from "@/data/mock";
@@ -61,6 +61,10 @@ export function ProblemsTable({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
+  // Use ref to avoid stale closure in useEffect
+  const onFilteredDataChangeRef = useRef(onFilteredDataChange);
+  onFilteredDataChangeRef.current = onFilteredDataChange;
+
   const table = useReactTable({
     data: problems,
     columns,
@@ -89,13 +93,12 @@ export function ProblemsTable({
 
   // Notify parent component when filtered data changes
   useEffect(() => {
-    if (onFilteredDataChange) {
+    if (onFilteredDataChangeRef.current) {
       const filteredRows = table.getFilteredRowModel().rows;
       const filteredData = filteredRows.map((row) => row.original);
-      onFilteredDataChange(filteredData);
+      onFilteredDataChangeRef.current(filteredData);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columnFilters, sorting, problems]);
+  }, [columnFilters, sorting, problems, table]);
 
   const isFiltered = columnFilters.length > 0;
 

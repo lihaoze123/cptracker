@@ -8,32 +8,51 @@ import {
   ValidationError,
   NetworkError,
 } from "@/types/error.types";
+import { toast } from "@/hooks/use-toast";
 
 export class ErrorHandler {
   /**
    * 处理错误并显示用户友好的消息
    */
   static handle(error: unknown, context?: string): void {
-    // 记录错误到控制台
-    console.error(`Error${context ? ` in ${context}` : ""}:`, error);
+    // 开发环境记录错误到控制台
+    if (import.meta.env.DEV) {
+      console.error(`Error${context ? ` in ${context}` : ""}:`, error);
+    }
 
     if (error instanceof ValidationError) {
-      console.error(`验证错误: ${error.message}`);
+      toast({
+        title: "验证错误",
+        description: error.message,
+        variant: "destructive",
+      });
       return;
     }
 
     if (error instanceof DatabaseError) {
-      console.error(`数据库错误: ${error.message}`);
+      toast({
+        title: "数据库错误",
+        description: error.message,
+        variant: "destructive",
+      });
       return;
     }
 
     if (error instanceof NetworkError) {
-      console.error(`网络错误: ${error.message}`);
+      toast({
+        title: "网络错误",
+        description: error.message,
+        variant: "destructive",
+      });
       return;
     }
 
     // 未知错误
-    console.error("发生未知错误，请稍后重试");
+    toast({
+      title: "操作失败",
+      description: error instanceof Error ? error.message : "发生未知错误，请稍后重试",
+      variant: "destructive",
+    });
   }
 
   /**

@@ -19,7 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { CloudDownloadIcon } from "@hugeicons/core-free-icons";
-import { fetchCodeforces, fetchAtCoder, fetchLuogu } from "@/lib/fetchOJs";
+import { fetchCodeforces, fetchAtCoder, fetchLuogu } from "@/services/oj";
 import type { SolvedProblem } from "@/data/mock";
 
 type OJType = "codeforces" | "atcoder" | "luogu" | "qoj";

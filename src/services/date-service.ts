@@ -141,3 +141,12 @@ export function isValidTimestamp(timestamp: number): boolean {
 export function isValidDate(date: Date): boolean {
   return date instanceof Date && !isNaN(date.getTime());
 }
+
+/**
+ * 从时间戳提取年份
+ * @param timestamp - Unix 时间戳（毫秒）
+ * @returns 年份数字
+ */
+export function getYearFromTimestamp(timestamp: number): number {
+  return new Date(timestamp).getFullYear();
+}

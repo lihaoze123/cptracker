@@ -125,9 +125,10 @@ export function SolutionDialog({
   const handleOpenChange = (nextOpen: boolean) => {
     if (solutionId) {
       navigate({
-        // @ts-ignore - TanStack Router cannot express cross-route search param navigation
-        // This component is used in both "/" and "/$username" routes
-        search: (prev) => updateSolutionParam(prev, solutionId, nextOpen) as any,
+        // TanStack Router's search types are route-specific, but this component
+        // is used across multiple routes. The runtime behavior is correct.
+        // @ts-expect-error - Cross-route search param navigation
+        search: (prev: Record<string, unknown>) => updateSolutionParam(prev, solutionId, nextOpen),
         replace: true,
       });
     }

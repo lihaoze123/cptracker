@@ -18,6 +18,7 @@ import {
 import { mockProblems, type SolvedProblem } from "@/data/mock";
 import { useAuthStore } from "@/stores/auth-store";
 import type { ProblemInput, ProblemUpdate } from "@/types/domain.types";
+import { toast } from "@/hooks/use-toast";
 
 const PROBLEMS_QUERY_KEY = ["problems"] as const;
 
@@ -233,7 +234,11 @@ export function useProblems() {
         await addProblemsMutation.mutateAsync(newProblems);
         return true;
       } catch (err) {
-        console.error("Add problems failed:", err);
+        toast({
+          title: "添加失败",
+          description: err instanceof Error ? err.message : "添加题目时发生错误",
+          variant: "destructive",
+        });
         return false;
       }
     },
@@ -246,7 +251,11 @@ export function useProblems() {
         await updateProblemMutation.mutateAsync({ id, changes });
         return true;
       } catch (err) {
-        console.error("Update problem failed:", err);
+        toast({
+          title: "更新失败",
+          description: err instanceof Error ? err.message : "更新题目时发生错误",
+          variant: "destructive",
+        });
         return false;
       }
     },
@@ -259,7 +268,11 @@ export function useProblems() {
         await deleteProblemMutation.mutateAsync(id);
         return true;
       } catch (err) {
-        console.error("Delete problem failed:", err);
+        toast({
+          title: "删除失败",
+          description: err instanceof Error ? err.message : "删除题目时发生错误",
+          variant: "destructive",
+        });
         return false;
       }
     },
@@ -272,7 +285,11 @@ export function useProblems() {
         await deleteProblemsMutation.mutateAsync(ids);
         return true;
       } catch (err) {
-        console.error("Delete problems failed:", err);
+        toast({
+          title: "删除失败",
+          description: err instanceof Error ? err.message : "批量删除时发生错误",
+          variant: "destructive",
+        });
         return false;
       }
     },
@@ -284,7 +301,11 @@ export function useProblems() {
       await clearAllProblemsMutation.mutateAsync();
       return true;
     } catch (err) {
-      console.error("Clear all problems failed:", err);
+      toast({
+        title: "清空失败",
+        description: err instanceof Error ? err.message : "清空数据时发生错误",
+        variant: "destructive",
+      });
       return false;
     }
   }, [clearAllProblemsMutation]);
@@ -295,7 +316,11 @@ export function useProblems() {
         await importProblemsMutation.mutateAsync({ newProblems, clearExisting });
         return true;
       } catch (err) {
-        console.error("Import problems failed:", err);
+        toast({
+          title: "导入失败",
+          description: err instanceof Error ? err.message : "导入数据时发生错误",
+          variant: "destructive",
+        });
         return false;
       }
     },
@@ -307,7 +332,11 @@ export function useProblems() {
       await resetToMockDataMutation.mutateAsync();
       return true;
     } catch (err) {
-      console.error("Reset to mock data failed:", err);
+      toast({
+        title: "重置失败",
+        description: err instanceof Error ? err.message : "重置数据时发生错误",
+        variant: "destructive",
+      });
       return false;
     }
   }, [resetToMockDataMutation]);
@@ -317,7 +346,11 @@ export function useProblems() {
       await uploadToCloudMutation.mutateAsync();
       return true;
     } catch (err) {
-      console.error("Upload to cloud failed:", err);
+      toast({
+        title: "上传失败",
+        description: err instanceof Error ? err.message : "上传到云端时发生错误",
+        variant: "destructive",
+      });
       return false;
     }
   }, [uploadToCloudMutation]);
@@ -327,7 +360,11 @@ export function useProblems() {
       await downloadFromCloudMutation.mutateAsync();
       return true;
     } catch (err) {
-      console.error("Download from cloud failed:", err);
+      toast({
+        title: "下载失败",
+        description: err instanceof Error ? err.message : "从云端下载时发生错误",
+        variant: "destructive",
+      });
       return false;
     }
   }, [downloadFromCloudMutation]);

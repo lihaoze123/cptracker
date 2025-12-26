@@ -5,6 +5,7 @@
 import { useState, useCallback, useEffect } from "react";
 import type { SolvedProblem } from "@/data/mock";
 import { ProblemService } from "@/services/problem-service";
+import { normalizeTagsString } from "@/services/tag-service";
 import { useProblems } from "@/hooks/use-problems-queries";
 
 interface ProblemFormData {
@@ -120,7 +121,7 @@ export function useProblemForm(options: UseProblemFormOptions): UseProblemFormRe
         题目名称: formData.题目名称.trim() || undefined,
         难度: formData.难度.trim() || undefined,
         题解: formData.题解.trim(),
-        关键词: ProblemService.normalizeTags(formData.关键词),
+        关键词: normalizeTagsString(formData.关键词),
         日期: formData.日期,
       };
 

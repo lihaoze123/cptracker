@@ -6,7 +6,6 @@
 // Import utility functions from specialized services
 import {
   normalizeTags,
-  normalizeTagsString,
   parseTagString,
   tagsToString,
   isValidTag,
@@ -20,14 +19,6 @@ import {
 } from './date-service';
 
 export class ProblemService {
-  /**
-   * Normalize tags by replacing Chinese separators and trimming whitespace
-   * @deprecated Use normalizeTagsString from tag-service instead
-   */
-  static normalizeTags(tags: string): string {
-    return normalizeTagsString(tags);
-  }
-
   // Re-export tag utility methods as static methods for convenience
   static normalizeTagsArray = normalizeTags;
   static parseTagString = parseTagString;
@@ -68,15 +59,6 @@ export class ProblemService {
   }
 
   /**
-   * Get current timestamp
-   * @deprecated Use getCurrentTimestamp instead
-   */
-  static getUTC8DateTime(): string {
-    // This method is deprecated, kept for backward compatibility
-    return getCurrentTimestamp().toString();
-  }
-
-  /**
    * Parse problem URL to extract OJ and problem ID
    */
   static parseProblemUrl(url: string): { oj: string; problemId: string } | null {
@@ -112,7 +94,6 @@ export class ProblemService {
 // Also export utility functions for direct import
 export {
   normalizeTags,
-  normalizeTagsString,
   parseTagString,
   tagsToString,
   isValidTag,

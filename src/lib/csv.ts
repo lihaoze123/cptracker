@@ -1,6 +1,6 @@
 import Papa from "papaparse";
 import type { SolvedProblem } from "@/data/mock";
-import { ProblemService } from "@/services/problem-service";
+import { normalizeTagsString } from "@/services/tag-service";
 import {
   getCurrentTimestamp,
   legacyDateStringToTimestamp,
@@ -84,7 +84,7 @@ export function parseCSV(file: File): Promise<CSVImportResult> {
           }
 
           // 使用统一的标签服务规范化标签
-          const normalizedTags = ProblemService.normalizeTags(row.关键词?.trim() || "");
+          const normalizedTags = normalizeTagsString(row.关键词?.trim() || "");
 
           // Parse date field - support both timestamp and legacy string formats
           let dateValue: number;
