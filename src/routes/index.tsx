@@ -1,11 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { z } from "zod";
-import {
-  ProblemCountHeatmap,
-  MaxDifficultyHeatmap,
-  getAvailableYears,
-} from "@/components/problem-heatmaps";
+import { getAvailableYears } from "@/components/problem-heatmaps";
 import { CSVToolbar } from "@/components/csv-toolbar";
 import { OJImport } from "@/components/oj-import";
 import { SettingsSheet } from "@/components/features/settings/settings-sheet";
@@ -21,24 +17,76 @@ import { User, Sparkles } from "lucide-react";
 const OverviewStats = lazy(() => import("@/components/overview-stats").then(m => ({ default: m.OverviewStats })));
 const ProblemChartsSection = lazy(() => import("@/components/problem-charts").then(m => ({ default: m.ProblemChartsSection })));
 const ProblemsTable = lazy(() => import("@/components/problems-table").then(m => ({ default: m.ProblemsTable })));
+const ProblemCountHeatmap = lazy(() => import("@/components/problem-heatmaps").then(m => ({ default: m.ProblemCountHeatmap })));
+const MaxDifficultyHeatmap = lazy(() => import("@/components/problem-heatmaps").then(m => ({ default: m.MaxDifficultyHeatmap })));
 
-// Skeleton components for lazy loading state
+// Skeleton components for lazy loading state - must match actual component sizes to prevent CLS
 function StatsSkeleton() {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-6 grid-cols-2 md:grid-cols-4">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
+        <div key={i} className="rounded-lg border bg-card p-4 min-h-[88px]">
+          <div className="h-8 w-16 bg-muted animate-pulse rounded mb-2" />
+          <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+        </div>
       ))}
     </div>
   );
 }
 
 function ChartsSkeleton() {
-  return <div className="h-64 bg-muted animate-pulse rounded-lg" />;
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="h-6 w-32 bg-muted animate-pulse rounded" />
+        <div className="h-8 w-32 bg-muted animate-pulse rounded" />
+      </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="rounded-lg border bg-card min-h-[280px]">
+            <div className="p-4 pb-2">
+              <div className="h-5 w-36 bg-muted animate-pulse rounded" />
+            </div>
+            <div className="p-4 pt-0">
+              <div className="h-[200px] bg-muted animate-pulse rounded" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function TableSkeleton() {
-  return <div className="h-96 bg-muted animate-pulse rounded-lg" />;
+  return (
+    <div className="rounded-lg border bg-card min-h-[500px]">
+      <div className="p-4 border-b">
+        <div className="flex gap-2">
+          <div className="h-9 w-64 bg-muted animate-pulse rounded" />
+          <div className="h-9 w-24 bg-muted animate-pulse rounded" />
+        </div>
+      </div>
+      <div className="p-4 space-y-3">
+        {[...Array(8)].map((_, i) => (
+          <div key={i} className="h-12 bg-muted animate-pulse rounded" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HeatmapSkeleton() {
+  return (
+    <div className="rounded-lg border bg-card min-h-[220px]">
+      <div className="p-4 pb-2 flex items-center justify-between">
+        <div className="h-5 w-32 bg-muted animate-pulse rounded" />
+        <div className="h-7 w-20 bg-muted animate-pulse rounded" />
+      </div>
+      <div className="p-4 pt-0">
+        <div className="h-[140px] bg-muted animate-pulse rounded" />
+      </div>
+    </div>
+  );
 }
 
 export const Route = createFileRoute("/")({
@@ -158,18 +206,22 @@ function Dashboard() {
         </Suspense>
 
         <div className="grid gap-6 md:grid-cols-2 select-none">
-          <ProblemCountHeatmap
-            problems={filteredProblems}
-            selectedYear={selectedYear}
-            onYearChange={setSelectedYear}
-            availableYears={availableYears}
-          />
-          <MaxDifficultyHeatmap
-            problems={filteredProblems}
-            selectedYear={selectedYear}
-            onYearChange={setSelectedYear}
-            availableYears={availableYears}
-          />
+          <Suspense fallback={<HeatmapSkeleton />}>
+            <ProblemCountHeatmap
+              problems={filteredProblems}
+              selectedYear={selectedYear}
+              onYearChange={setSelectedYear}
+              availableYears={availableYears}
+            />
+          </Suspense>
+          <Suspense fallback={<HeatmapSkeleton />}>
+            <MaxDifficultyHeatmap
+              problems={filteredProblems}
+              selectedYear={selectedYear}
+              onYearChange={setSelectedYear}
+              availableYears={availableYears}
+            />
+          </Suspense>
         </div>
 
         <Suspense fallback={<TableSkeleton />}>

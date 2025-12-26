@@ -1,9 +1,11 @@
 /**
  * Supabase 数据库操作
  * 对应 IndexedDB 的 problems 表
+ *
+ * Note: Uses lazy-loaded Supabase client to avoid loading SDK for local-mode users
  */
 
-import { createClient } from "./client";
+import { getSupabaseClient } from "./lazy-client";
 import type {
   SupabaseProblemDB,
   SupabaseProblemCreate,
@@ -48,7 +50,7 @@ export function toSupabaseData(problem: ProblemInput): SupabaseProblemCreate {
 // ==================== 数据库操作 ====================
 
 export async function fetchAllProblems(): Promise<SolvedProblem[]> {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -69,7 +71,7 @@ export async function fetchAllProblems(): Promise<SolvedProblem[]> {
  * 获取原始 Supabase 数据库记录（用于同步）
  */
 export async function fetchRawProblems(): Promise<SupabaseProblemDB[]> {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -89,7 +91,7 @@ export async function fetchRawProblems(): Promise<SupabaseProblemDB[]> {
 export async function insertProblem(
   problem: ProblemInput
 ): Promise<SolvedProblem> {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   const createData = toSupabaseCreate(problem);
   const { data, error } = await supabase
     .from("problems")
@@ -107,7 +109,7 @@ export async function insertProblem(
 export async function insertRawProblem(
   problem: ProblemInput
 ): Promise<SupabaseProblemDB> {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   const createData = toSupabaseCreate(problem);
   const { data, error } = await supabase
     .from("problems")
@@ -122,7 +124,7 @@ export async function insertRawProblem(
 export async function insertProblems(
   problems: ProblemInput[]
 ): Promise<SolvedProblem[]> {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   const createData = problems.map(toSupabaseCreate);
   const { data, error } = await supabase
     .from("problems")
@@ -139,7 +141,7 @@ export async function insertProblems(
 export async function insertRawProblems(
   problems: ProblemInput[]
 ): Promise<SupabaseProblemDB[]> {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   const createData = problems.map(toSupabaseCreate);
   const { data, error } = await supabase
     .from("problems")
@@ -154,7 +156,7 @@ export async function updateProblemById(
   id: string,
   changes: ProblemUpdate
 ): Promise<SolvedProblem> {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   const updateData = toSupabaseUpdate(changes);
   const { data, error } = await supabase
     .from("problems")
@@ -168,14 +170,14 @@ export async function updateProblemById(
 }
 
 export async function deleteProblemById(id: string): Promise<void> {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   const { error } = await supabase.from("problems").delete().eq("id", id);
 
   if (error) throw error;
 }
 
 export async function deleteAllUserProblems(): Promise<void> {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -1,12 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/jetbrains-mono";
 @import "@fontsource-variable/inter-tight";
-@import "@fontsource/instrument-serif/400.css";
-@import "@fontsource/instrument-serif/400-italic.css";
-@import "@fontsource/space-mono/400.css";
-@import "@fontsource/space-mono/700.css";
+
+/* Non-essential fonts are loaded dynamically:
+ * - jetbrains-mono: loaded when viewing code/tables
+ * - instrument-serif, space-mono: loaded with year-review route
+ */
 
 @custom-variant dark (&:is(.dark *));
 
