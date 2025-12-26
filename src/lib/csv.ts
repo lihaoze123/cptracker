@@ -91,11 +91,17 @@ export function parseCSV(file: File): Promise<CSVImportResult> {
           const dateInput = row.日期?.trim();
 
           if (dateInput) {
-            // Check if it's a timestamp (numeric string)
-            const timestamp = Number.parseInt(dateInput, 10);
-            if (!Number.isNaN(timestamp) && timestamp > 0) {
-              // It's a timestamp
-              dateValue = timestamp;
+            // Check if it's a timestamp (pure numeric string with reasonable value)
+            // Timestamps should be > 1000000000000 (Sep 2001 in ms) and pure digits
+            if (/^\d+$/.test(dateInput)) {
+              const timestamp = Number.parseInt(dateInput, 10);
+              // Valid millisecond timestamp: between 2001 and 2100
+              if (timestamp > 1000000000000 && timestamp < 4102444800000) {
+                dateValue = timestamp;
+              } else {
+                // Could be seconds timestamp or invalid, convert via legacy parser
+                dateValue = legacyDateStringToTimestamp(dateInput);
+              }
             } else {
               // It's a legacy date string, convert to timestamp
               dateValue = legacyDateStringToTimestamp(dateInput);
