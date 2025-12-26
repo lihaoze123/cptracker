@@ -19,6 +19,7 @@ A modern, full-stack dashboard for tracking competitive programming progress. Re
 - **Public Solution Sharing** - Share individual solutions via unique public URLs with route-based sharing (`/:username/solutions/:solutionId`)
 - **CSV Import/Export** - Backup and restore your data easily
 - **OJ Import** - Import problems directly from Codeforces, AtCoder, Luogu (洛谷), and other OJ platforms with automatic difficulty conversion
+- **Year Review** - Beautiful animated yearly recap slides showcasing your competitive programming journey
 
 ### Cloud Sync & Authentication (Optional)
 - **Dual Storage Mode** - Choose between local-only (IndexedDB) or cloud sync (Supabase)
@@ -40,7 +41,7 @@ A modern, full-stack dashboard for tracking competitive programming progress. Re
 - **Frontend**: React 19 + TypeScript + Vite
 - **Routing**: TanStack Router v1 (File-based routing with route generation)
 - **Styling**: TailwindCSS 4 + shadcn/ui components
-- **State Management**: React Context API + TanStack Query (Server state)
+- **State Management**: Zustand + React Context API + TanStack Query (Server state)
 - **Data Fetching**: TanStack Query v5 (Caching, mutations, background sync)
 - **Data Table**: TanStack Table v8
 - **Local Storage**: Dexie.js (IndexedDB)
@@ -90,7 +91,7 @@ No additional setup required. All data is stored in your browser's IndexedDB.
 2. Create `.env.local` file in the project root:
 ```env
 VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_SUPABASE_PUBLISHABLE_OR_ANON_KEY=your-anon-key
 ```
 
 3. Run the database schema in your Supabase SQL Editor:
@@ -193,6 +194,7 @@ The application uses TanStack Router with file-based routing:
 - `/auth?view=sign-up` - Sign up page
 - `/auth?view=forgot-password` - Password reset page
 - `/auth?view=update-password` - Update password page
+- `/year-review` - Year review fullscreen page (animated yearly recap)
 - `/:username` - Public profile page (e.g., `/john_doe`)
 - `/:username/solutions/:solutionId` - Shared solution page (redirects to profile with solution modal)
 
@@ -201,6 +203,7 @@ Routes are automatically generated from the `src/routes/` directory. The router 
 - Search parameter validation with Zod
 - Development tools (TanStack Router DevTools)
 - Route-based solution sharing with redirect handling
+- Code-split lazy routes for better performance
 
 ## Data Schema
 
@@ -210,10 +213,11 @@ Routes are automatically generated from the `src/routes/` directory. The router 
 |-------|------|-------------|
 | id | number/UUID | Unique identifier |
 | 题目 | string | Problem URL or text |
+| 题目名称 | string (optional) | Problem name |
 | 难度 | string | Difficulty rating with fine granularity (supports Codeforces, AtCoder, Luogu ratings) |
 | 题解 | string | Solution notes (supports Markdown/LaTeX) |
 | 关键词 | string | Comma-separated tags (e.g., "dp, greedy, favorited") |
-| 日期 | string | ISO datetime when problem was solved |
+| 日期 | number | Unix timestamp in milliseconds (UTC) when problem was solved |
 
 ### Difficulty Rating System
 
@@ -251,43 +255,70 @@ Rating colors follow Codeforces conventions:
 cptracker/
 ├── src/
 │   ├── routes/             # TanStack Router routes
-│   │   ├── __root.tsx     # Root layout with providers
-│   │   ├── index.tsx      # Dashboard page (/)
-│   │   ├── auth.tsx       # Authentication page (/auth)
-│   │   ├── $username.tsx  # Public profile page (/:username)
-│   │   └── $username/     # Nested routes
+│   │   ├── __root.tsx          # Root layout with providers
+│   │   ├── index.tsx           # Dashboard page (/)
+│   │   ├── auth.tsx            # Authentication page (/auth)
+│   │   ├── auth.lazy.tsx       # Lazy-loaded auth component
+│   │   ├── year-review.tsx     # Year review route (/year-review)
+│   │   ├── year-review.lazy.tsx # Lazy-loaded year review component
+│   │   ├── $username.tsx       # Public profile layout (/:username)
+│   │   └── $username/          # Nested routes
+│   │       ├── index.lazy.tsx  # Lazy-loaded public profile
 │   │       └── solutions/
 │   │           └── $solutionId.tsx  # Solution sharing route
 │   ├── components/         # React components
-│   │   ├── ui/            # shadcn/ui components
-│   │   ├── auth-page.tsx  # Authentication UI
+│   │   ├── ui/                # shadcn/ui components
+│   │   ├── data-table/        # Data table components
+│   │   ├── features/          # Feature-based components
+│   │   │   ├── charts/        # Statistics charts
+│   │   │   ├── problems/      # Problem-related components
+│   │   │   │   └── columns/   # Table column definitions
+│   │   │   └── settings/      # Settings sheet sections
+│   │   ├── year-review/       # Year review slides and components
+│   │   ├── auth-page.tsx      # Authentication UI
 │   │   ├── problems-table.tsx
 │   │   ├── public-profile-view.tsx
-│   │   ├── settings-sheet.tsx
-│   │   ├── oj-import.tsx  # OJ import functionality
+│   │   ├── oj-import.tsx      # OJ import functionality
 │   │   ├── problem-heatmaps.tsx  # Activity heatmaps
-│   │   ├── rating-badge.tsx     # Difficulty rating display
-│   │   ├── solution-dialog.tsx  # Solution view/share dialog
-│   │   └── tags-input.tsx      # Tag input component
-│   ├── contexts/          # React contexts
-│   │   └── auth-context.tsx
+│   │   ├── rating-badge.tsx       # Difficulty rating display
+│   │   ├── solution-dialog.tsx    # Solution view/share dialog
+│   │   └── tags-input.tsx        # Tag input component
 │   ├── hooks/             # Custom React hooks
-│   │   ├── use-problems-queries.ts  # TanStack Query hooks
+│   │   ├── use-problems-queries.ts   # TanStack Query hooks
+│   │   ├── use-problems-mutation.ts  # Mutation helpers
 │   │   └── use-toast.ts
 │   ├── lib/               # Utility libraries
-│   │   ├── db.ts         # IndexedDB (Dexie)
+│   │   ├── db.ts              # IndexedDB (Dexie)
 │   │   ├── storage-mode.ts
-│   │   ├── fetchOJs.ts   # OJ platform integration
-│   │   ├── csv.ts        # CSV import/export
-│   │   ├── problem-utils.ts  # Problem utilities
-│   │   └── supabase/     # Supabase integration
-│   │       ├── client.ts
-│   │       ├── auth.ts
-│   │       ├── database.ts
-│   │       └── profiles.ts
-│   ├── data/              # Type definitions and mock data
+│   │   ├── csv.ts             # CSV import/export
+│   │   ├── problem-utils.ts   # Problem utilities
+│   │   ├── stats-utils.ts     # Statistics calculations
+│   │   ├── supabase/          # Supabase integration
+│   │   │   ├── client.ts
+│   │   │   ├── lazy-client.ts # Lazy-loaded Supabase client
+│   │   │   ├── database.ts
+│   │   │   ├── profiles.ts
+│   │   │   └── sync.ts
+│   │   ├── mappers/           # Data transformation
+│   │   │   └── problem-mapper.ts
+│   │   └── year-review/       # Year review utilities
+│   ├── services/          # Business logic services
+│   │   ├── analytics/        # Analytics (difficulty, source, time)
+│   │   ├── oj/               # OJ platform integration services
+│   │   ├── date-service.ts
+│   │   ├── error-handler.ts
+│   │   ├── problem-service.ts
+│   │   └── tag-service.ts
+│   ├── stores/            # Zustand stores
+│   │   ├── auth-store.ts
+│   │   └── ui-store.ts
+│   ├── types/             # TypeScript types
+│   │   ├── domain.types.ts
+│   │   ├── database.types.ts
+│   │   └── data-table.types.ts
+│   ├── data/              # Mock data
 │   │   └── mock.ts
-│   └── main.tsx          # App entry point with QueryClientProvider + Router
+│   └── main.tsx          # App entry point
 ├── supabase/
 │   └── schema.sql        # Database schema for Supabase
 ├── netlify/              # Netlify configuration
@@ -320,75 +351,6 @@ npm run build
 npm run preview
 ```
 
-### Important Development Notes
-
-1. **Route Generation**: Always run `npm run generate` after modifying any route files in `src/routes/`. The route tree (`src/routeTree.gen.ts`) is auto-generated and should never be edited manually.
-
-2. **Build Process**: The build command automatically:
-   - Generates the route tree
-   - Runs TypeScript type checking
-   - Creates the production bundle
-
-3. **Storage Mode**: The app uses a dual storage system. Always use the `useProblems()` hook - never import `db.ts` or `supabase/database.ts` directly in components.
-
-### Development Workflow
-
-1. After modifying any route files in `src/routes/`, always run `npm run generate` to update the route tree
-2. The project uses TypeScript strict mode - ensure all types are properly defined
-3. The build process automatically generates routes, type-checks, and creates the production bundle
-
-### Project Structure & Important Patterns
-
-#### Storage Mode Abstraction
-The application uses a dual storage system with a unified interface:
-
-```typescript
-// Always use this hook - never import db.ts or supabase/database.ts directly
-import { useProblems } from "@/hooks/use-problems-queries";
-
-// The hook automatically handles storage mode switching
-const { data: problems, addProblem, updateProblem } = useProblems();
-```
-
-#### Route Management
-- Routes are defined in `src/routes/` using file-based routing
-- The route tree (`src/routeTree.gen.ts`) is auto-generated - never edit manually
-- All routes inherit from the root layout (`__root.tsx`) which provides:
-  - AuthContext for authentication state
-  - NuqsAdapter for URL search params
-  - TanStack Query client
-  - Toast notifications
-
-#### Component Architecture
-- UI components use shadcn/ui patterns with class-variance-authority
-- All components are mobile-first with Tailwind responsive breakpoints
-- State management follows React patterns with proper memoization where needed
-
-## Deployment
-
-### Netlify Deployment
-
-The project includes Netlify configuration for easy deployment:
-
-1. **Automatic Deployment**: Connect your repository to Netlify for automatic deployments on push to main branch
-2. **Serverless Functions**: The project uses Netlify Functions for the Luogu API proxy to handle CORS issues
-3. **Environment Variables**: Set the following in Netlify dashboard:
-   - `VITE_SUPABASE_URL`: Your Supabase project URL
-   - `VITE_SUPABASE_ANON_KEY`: Your Supabase anonymous key
-
-### Local Deployment
-
-For local deployment without Netlify:
-
-```bash
-# Build for production
-npm run build
-
-# Serve the dist folder with any static server
-npm install -g serve
-serve -s dist
-```
-
 ## Contributing
 
 Contributions are welcome! Please feel free to submit issues and pull requests.
@@ -398,14 +360,6 @@ Contributions are welcome! Please feel free to submit issues and pull requests.
 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-### Development Guidelines
-
-- Follow the existing code style and patterns
-- Always use the `useProblems()` hook for data operations
-- Run `npm run generate` after modifying routes
-- Ensure TypeScript passes without errors
-- Test both local and cloud storage modes when applicable
 
 ## License
 
