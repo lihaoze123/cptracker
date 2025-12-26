@@ -2,6 +2,7 @@
  * Login Prompt Dialog
  * Shown when user tries to enable cloud sync without being logged in
  */
+import { Link } from "@tanstack/react-router";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,7 +32,7 @@ export function LoginPromptDialog({ open, onOpenChange }: LoginPromptDialogProps
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction asChild>
-            <a href="#login">Sign In</a>
+            <Link to="/auth" search={{ view: "login" }}>Sign In</Link>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
