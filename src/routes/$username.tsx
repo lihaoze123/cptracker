@@ -1,8 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/$username")({
-  validateSearch: z.object({
-    solution: z.string().optional(),
-  }),
+  component: UsernameLayout,
 });
+
+function UsernameLayout() {
+  return <Outlet />;
+}

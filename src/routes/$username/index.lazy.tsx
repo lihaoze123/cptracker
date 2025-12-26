@@ -1,7 +1,7 @@
 import { createLazyFileRoute, useNavigate } from "@tanstack/react-router";
 import { PublicProfileView } from "@/components/public-profile-view";
 
-export const Route = createLazyFileRoute("/$username")({
+export const Route = createLazyFileRoute("/$username/")({
   component: PublicProfileRoute,
 });
 
