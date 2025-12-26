@@ -13,6 +13,24 @@ import type {
   MonthData,
 } from "./types";
 
+// 导入分析函数供内部使用
+import {
+  calculateVelocityData,
+  calculateLongestStreak,
+  calculateWeekdayStats,
+  getBusiestDay,
+  calculateWeekendPercentage,
+  calculateHourlyStats,
+  determineTimeOfDay,
+  calculateNightPercentage,
+  calculateDifficultyBreakdown,
+  calculateAvgDifficulty,
+  getHardestProblems,
+  calculateMonthlyProgress,
+  calculateSourceBreakdown,
+  calculateTopTags,
+} from "@/services/analytics";
+
 // 重新导出所有分析函数
 export {
   calculateVelocityData,
@@ -29,7 +47,7 @@ export {
   calculateMonthlyProgress,
   calculateSourceBreakdown,
   calculateTopTags,
-} from "@/services/analytics";
+};
 
 /**
  * 用户信息接口（年度回顾用）
@@ -48,24 +66,6 @@ export function aggregateYearReviewData(
   year: number,
   userInfo: YearReviewUserInfo = { username: "Anonymous" }
 ): CPYearReviewData {
-  // 导入分析函数
-  const {
-    calculateVelocityData,
-    calculateLongestStreak,
-    calculateWeekdayStats,
-    getBusiestDay,
-    calculateWeekendPercentage,
-    calculateHourlyStats,
-    determineTimeOfDay,
-    calculateNightPercentage,
-    calculateDifficultyBreakdown,
-    calculateAvgDifficulty,
-    getHardestProblems,
-    calculateMonthlyProgress,
-    calculateSourceBreakdown,
-    calculateTopTags,
-  } = require("@/services/analytics");
-
   // 解析日期
   function parseDate(timestamp: number): Date | null {
     const date = new Date(timestamp);
