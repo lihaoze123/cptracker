@@ -14,16 +14,17 @@ import {
   updateProblemById,
   deleteProblemById,
   deleteAllUserProblems,
-  toLocalProblem,
 } from "@/lib/supabase/database";
 import { mockProblems, type SolvedProblem } from "@/data/mock";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuthStore } from "@/stores/auth-store";
+import type { ProblemInput, ProblemUpdate } from "@/types/domain.types";
+import { toast } from "@/hooks/use-toast";
 
 const PROBLEMS_QUERY_KEY = ["problems"] as const;
 
 // Main hook that provides all problems data and mutations
 export function useProblems() {
-  const { storageMode, user } = useAuth();
+  const { storageMode, user } = useAuthStore();
   const queryClient = useQueryClient();
   const isCloudMode = storageMode === "cloud" && user !== null;
 
@@ -37,9 +38,8 @@ export function useProblems() {
     queryKey: [...PROBLEMS_QUERY_KEY, isCloudMode ? "cloud" : "local"],
     queryFn: async () => {
       if (isCloudMode) {
-        // Cloud mode: fetch from Supabase
-        const cloudProblems = await fetchAllProblems();
-        return cloudProblems.map((p, idx) => toLocalProblem(p, idx + 1));
+        // Cloud mode: fetch from Supabase (already returns SolvedProblem[])
+        return await fetchAllProblems();
       } else {
         // Local mode: fetch from IndexedDB
         return await getAllProblems();
@@ -47,9 +47,18 @@ export function useProblems() {
     },
   });
 
+  // Create Map for O(1) lookups instead of O(n) find()
+  const problemMap = useMemo(() => {
+    const map = new Map<number, SolvedProblem & { supabase_id?: string }>();
+    problems.forEach((problem) => {
+      map.set(problem.id, problem as SolvedProblem & { supabase_id?: string });
+    });
+    return map;
+  }, [problems]);
+
   // Add problems mutation
   const addProblemsMutation = useMutation({
-    mutationFn: async (newProblems: Omit<SolvedProblem, "id">[]) => {
+    mutationFn: async (newProblems: ProblemInput[]) => {
       if (isCloudMode) {
         await insertProblems(newProblems);
       } else {
@@ -68,12 +77,11 @@ export function useProblems() {
       changes,
     }: {
       id: number;
-      changes: Partial<SolvedProblem>;
+      changes: ProblemUpdate;
     }) => {
       if (isCloudMode) {
-        const problem = problems.find((p) => p.id === id) as SolvedProblem & {
-          supabase_id?: string;
-        };
+        // O(1) lookup instead of O(n) find()
+        const problem = problemMap.get(id);
         if (problem?.supabase_id) {
           await updateProblemById(problem.supabase_id, changes);
         }
@@ -90,9 +98,8 @@ export function useProblems() {
   const deleteProblemMutation = useMutation({
     mutationFn: async (id: number) => {
       if (isCloudMode) {
-        const problem = problems.find((p) => p.id === id) as SolvedProblem & {
-          supabase_id?: string;
-        };
+        // O(1) lookup instead of O(n) find()
+        const problem = problemMap.get(id);
         if (problem?.supabase_id) {
           await deleteProblemById(problem.supabase_id);
         }
@@ -109,13 +116,9 @@ export function useProblems() {
   const deleteProblemsMutation = useMutation({
     mutationFn: async (ids: number[]) => {
       if (isCloudMode) {
+        // O(1) lookup per item instead of O(n)
         const supabaseIds = ids
-          .map((id) => {
-            const problem = problems.find((p) => p.id === id) as SolvedProblem & {
-              supabase_id?: string;
-            };
-            return problem?.supabase_id;
-          })
+          .map((id) => problemMap.get(id)?.supabase_id)
           .filter(Boolean) as string[];
         await Promise.all(supabaseIds.map((id) => deleteProblemById(id)));
       } else {
@@ -147,7 +150,7 @@ export function useProblems() {
       newProblems,
       clearExisting = false,
     }: {
-      newProblems: Omit<SolvedProblem, "id">[];
+      newProblems: ProblemInput[];
       clearExisting?: boolean;
     }) => {
       if (isCloudMode) {
@@ -226,12 +229,16 @@ export function useProblems() {
 
   // Wrapper functions with consistent return type
   const addProblems = useCallback(
-    async (newProblems: Omit<SolvedProblem, "id">[]) => {
+    async (newProblems: ProblemInput[]) => {
       try {
         await addProblemsMutation.mutateAsync(newProblems);
         return true;
       } catch (err) {
-        console.error("Add problems failed:", err);
+        toast({
+          title: "添加失败",
+          description: err instanceof Error ? err.message : "添加题目时发生错误",
+          variant: "destructive",
+        });
         return false;
       }
     },
@@ -239,12 +246,16 @@ export function useProblems() {
   );
 
   const updateProblem = useCallback(
-    async (id: number, changes: Partial<SolvedProblem>) => {
+    async (id: number, changes: ProblemUpdate) => {
       try {
         await updateProblemMutation.mutateAsync({ id, changes });
         return true;
       } catch (err) {
-        console.error("Update problem failed:", err);
+        toast({
+          title: "更新失败",
+          description: err instanceof Error ? err.message : "更新题目时发生错误",
+          variant: "destructive",
+        });
         return false;
       }
     },
@@ -257,7 +268,11 @@ export function useProblems() {
         await deleteProblemMutation.mutateAsync(id);
         return true;
       } catch (err) {
-        console.error("Delete problem failed:", err);
+        toast({
+          title: "删除失败",
+          description: err instanceof Error ? err.message : "删除题目时发生错误",
+          variant: "destructive",
+        });
         return false;
       }
     },
@@ -270,7 +285,11 @@ export function useProblems() {
         await deleteProblemsMutation.mutateAsync(ids);
         return true;
       } catch (err) {
-        console.error("Delete problems failed:", err);
+        toast({
+          title: "删除失败",
+          description: err instanceof Error ? err.message : "批量删除时发生错误",
+          variant: "destructive",
+        });
         return false;
       }
     },
@@ -282,18 +301,26 @@ export function useProblems() {
       await clearAllProblemsMutation.mutateAsync();
       return true;
     } catch (err) {
-      console.error("Clear all problems failed:", err);
+      toast({
+        title: "清空失败",
+        description: err instanceof Error ? err.message : "清空数据时发生错误",
+        variant: "destructive",
+      });
       return false;
     }
   }, [clearAllProblemsMutation]);
 
   const importProblems = useCallback(
-    async (newProblems: Omit<SolvedProblem, "id">[], clearExisting = false) => {
+    async (newProblems: ProblemInput[], clearExisting = false) => {
       try {
         await importProblemsMutation.mutateAsync({ newProblems, clearExisting });
         return true;
       } catch (err) {
-        console.error("Import problems failed:", err);
+        toast({
+          title: "导入失败",
+          description: err instanceof Error ? err.message : "导入数据时发生错误",
+          variant: "destructive",
+        });
         return false;
       }
     },
@@ -305,7 +332,11 @@ export function useProblems() {
       await resetToMockDataMutation.mutateAsync();
       return true;
     } catch (err) {
-      console.error("Reset to mock data failed:", err);
+      toast({
+        title: "重置失败",
+        description: err instanceof Error ? err.message : "重置数据时发生错误",
+        variant: "destructive",
+      });
       return false;
     }
   }, [resetToMockDataMutation]);
@@ -315,7 +346,11 @@ export function useProblems() {
       await uploadToCloudMutation.mutateAsync();
       return true;
     } catch (err) {
-      console.error("Upload to cloud failed:", err);
+      toast({
+        title: "上传失败",
+        description: err instanceof Error ? err.message : "上传到云端时发生错误",
+        variant: "destructive",
+      });
       return false;
     }
   }, [uploadToCloudMutation]);
@@ -325,7 +360,11 @@ export function useProblems() {
       await downloadFromCloudMutation.mutateAsync();
       return true;
     } catch (err) {
-      console.error("Download from cloud failed:", err);
+      toast({
+        title: "下载失败",
+        description: err instanceof Error ? err.message : "从云端下载时发生错误",
+        variant: "destructive",
+      });
       return false;
     }
   }, [downloadFromCloudMutation]);

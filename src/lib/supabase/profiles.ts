@@ -1,10 +1,13 @@
 /**
  * Supabase Profiles API
  * 用户资料管理
+ *
+ * Note: Uses lazy-loaded Supabase client to avoid loading SDK for local-mode users
  */
 
-import { createClient } from "./client";
+import { getSupabaseClient } from "./lazy-client";
 import type { SupabaseProblem } from "./database";
+import { isSupabaseError } from "@/types/error.types";
 
 export interface UserProfile {
   id: string;
@@ -20,7 +23,7 @@ export interface UserProfile {
  * 获取当前用户的 profile
  */
 export async function getCurrentUserProfile(): Promise<UserProfile | null> {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -43,7 +46,7 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
 export async function getProfileByUsername(
   username: string
 ): Promise<UserProfile | null> {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   const { data, error } = await supabase
     .from("profiles")
     .select("*")
@@ -69,7 +72,7 @@ export async function updateProfile(updates: {
   is_public?: boolean;
   avatar_hash?: string;
 }): Promise<UserProfile> {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -91,7 +94,7 @@ export async function updateProfile(updates: {
  * 检查 username 是否可用
  */
 export async function isUsernameAvailable(username: string): Promise<boolean> {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   const { data, error } = await supabase
     .from("profiles")
     .select("username")
@@ -106,7 +109,7 @@ export async function isUsernameAvailable(username: string): Promise<boolean> {
  * 根据 username 获取用户的所有题目（公开访问）
  */
 export async function getProblemsByUsername(username: string) {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
 
   // 首先获取用户 profile
   const profile = await getProfileByUsername(username);
@@ -136,7 +139,7 @@ export async function getPublicSolutionByUsername(
   username: string,
   solutionId: string
 ): Promise<{ profile: UserProfile; problem: SupabaseProblem }> {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   const profile = await getProfileByUsername(username);
 
   if (!profile) {
@@ -155,7 +158,7 @@ export async function getPublicSolutionByUsername(
     .single();
 
   if (error) {
-    if ((error as { code?: string }).code === "PGRST116") {
+    if (isSupabaseError(error) && error.code === "PGRST116") {
       throw new Error("Solution not found");
     }
     throw error;
@@ -165,5 +168,5 @@ export async function getPublicSolutionByUsername(
     throw new Error("Solution not found");
   }
 
-  return { profile, problem: data as SupabaseProblem };
+  return { profile, problem: data };
 }

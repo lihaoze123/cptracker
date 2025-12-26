@@ -1,12 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import "katex/dist/katex.min.css";
+import { useMemo, useState, lazy, Suspense } from "react";
 import { Link, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import {
   Dialog,
@@ -16,44 +10,58 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+
+// Lazy load the markdown renderer to avoid loading heavy dependencies
+// (react-markdown, remark-*, rehype-*, katex, react-syntax-highlighter)
+// until the user actually opens a solution dialog
+const MarkdownRenderer = lazy(() => import("./markdown-renderer"));
+
+/**
+ * Type for router state with optional solution param
+ * Used for type-safe access to solution search param
+ */
+interface RouterStateWithSolution {
+  solution?: string;
+}
+
+/**
+ * Type-safe function to update search params with solution.
+ * Note: TanStack Router's search param types are route-specific.
+ * This component is used across multiple routes, and TypeScript
+ * cannot express cross-route navigation. The runtime behavior is correct.
+ */
+function updateSolutionParam(
+  prev: Record<string, unknown>,
+  solutionId: string,
+  add: boolean
+): Record<string, unknown> {
+  const search = prev as RouterStateWithSolution;
+  const next = { ...prev };
+  if (add) {
+    next.solution = solutionId;
+  } else if (search.solution === solutionId) {
+    delete next.solution;
+  }
+  return next;
+}
+
+function MarkdownSkeleton() {
+  return (
+    <div className="space-y-3 animate-pulse">
+      <div className="h-4 bg-muted rounded w-3/4" />
+      <div className="h-4 bg-muted rounded w-full" />
+      <div className="h-4 bg-muted rounded w-5/6" />
+      <div className="h-20 bg-muted rounded w-full" />
+      <div className="h-4 bg-muted rounded w-2/3" />
+    </div>
+  );
+}
 
 export function SolutionContent({ solution }: { solution: string }) {
   return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm, remarkMath]}
-      rehypePlugins={[rehypeKatex]}
-      components={{
-        code: ({ className, children, ...props }) => {
-          const match = /language-(\w+)/.exec(className || "");
-          const codeString = String(children).replace(/\n$/, "");
-
-          if (match) {
-            return (
-              <SyntaxHighlighter
-                showLineNumbers={true}
-                language={match[1]}
-                PreTag="div"
-                style={oneLight}
-              >
-                {codeString}
-              </SyntaxHighlighter>
-            );
-          }
-
-          return (
-            <code
-              className="bg-muted px-1 py-0.5 text-xs"
-              {...props}
-            >
-              {children}
-            </code>
-          );
-        },
-      }}
-    >
-      {solution}
-    </ReactMarkdown>
+    <Suspense fallback={<MarkdownSkeleton />}>
+      <MarkdownRenderer content={solution} />
+    </Suspense>
   );
 }
 
@@ -74,8 +82,8 @@ export function SolutionDialog({
   const router = useRouter();
   const activeSolutionId = useRouterState({
     select: (state) => {
-      const current = (state.location.search as { solution?: string }).solution;
-      return typeof current === "string" ? current : undefined;
+      const search = state.location.search as RouterStateWithSolution;
+      return typeof search.solution === "string" ? search.solution : undefined;
     },
   });
   const [localOpen, setLocalOpen] = useState(false);
@@ -96,16 +104,10 @@ export function SolutionDialog({
   const handleOpenChange = (nextOpen: boolean) => {
     if (solutionId) {
       navigate({
-        // Typed as any to allow use outside a specific route context
-        search: ((prev: Record<string, unknown>) => {
-          const nextSearch = { ...prev };
-          if (nextOpen) {
-            nextSearch.solution = solutionId;
-          } else if ((prev as { solution?: string }).solution === solutionId) {
-            delete nextSearch.solution;
-          }
-          return nextSearch;
-        }) as any,
+        // TanStack Router's search types are route-specific, but this component
+        // is used across multiple routes. The runtime behavior is correct.
+        // @ts-expect-error - Cross-route search param navigation
+        search: (prev: Record<string, unknown>) => updateSolutionParam(prev, solutionId, nextOpen),
         replace: true,
       });
     }

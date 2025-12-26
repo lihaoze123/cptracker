@@ -9,21 +9,21 @@
 
 import { db, type StoredProblem } from "@/lib/db";
 import {
-  fetchAllProblems,
-  insertProblem,
-  insertProblems,
+  fetchRawProblems,
+  insertRawProblem,
+  insertRawProblems,
   updateProblemById,
   deleteProblemById,
   deleteAllUserProblems,
 } from "./database";
-import type { SolvedProblem } from "@/data/mock";
+import type { ProblemInput, ProblemUpdate } from "@/types/domain.types";
 
 /**
  * 从云端拉取所有数据并合并到本地
  * 策略：云端数据优先，本地未同步的数据保留
  */
 export async function pullFromCloud(): Promise<void> {
-  const cloudProblems = await fetchAllProblems();
+  const cloudProblems = await fetchRawProblems();
   const localProblems = await db.problems.toArray();
 
   // 创建 supabase_id 到本地问题的映射
@@ -105,7 +105,7 @@ export async function pushToCloud(): Promise<void> {
           });
         } else {
           // 新增到云端
-          const cloudProblem = await insertProblem({
+          const cloudProblem = await insertRawProblem({
             题目: problem.题目,
             难度: problem.难度,
             题解: problem.题解,
@@ -147,7 +147,7 @@ export async function initialUpload(): Promise<void> {
 
   if (problemsToUpload.length === 0) return;
 
-  const cloudProblems = await insertProblems(
+  const cloudProblems = await insertRawProblems(
     problemsToUpload.map((p) => ({
       题目: p.题目,
       难度: p.难度,
@@ -171,7 +171,7 @@ export async function initialUpload(): Promise<void> {
  * 从云端下载所有数据（覆盖本地）
  */
 export async function downloadFromCloud(): Promise<void> {
-  const cloudProblems = await fetchAllProblems();
+  const cloudProblems = await fetchRawProblems();
 
   // 清空本地数据
   await db.problems.clear();
@@ -205,7 +205,7 @@ export async function clearCloudData(): Promise<void> {
  * 添加问题（标记待同步）
  */
 export async function addProblemWithSync(
-  problem: Omit<SolvedProblem, "id">
+  problem: ProblemInput
 ): Promise<number> {
   const id = await db.problems.add({
     ...problem,
@@ -219,7 +219,7 @@ export async function addProblemWithSync(
  * 批量添加问题（标记待同步）
  */
 export async function addProblemsWithSync(
-  problems: Omit<SolvedProblem, "id">[]
+  problems: ProblemInput[]
 ): Promise<number> {
   const storedProblems = problems.map(
     (p) =>
@@ -238,7 +238,7 @@ export async function addProblemsWithSync(
  */
 export async function updateProblemWithSync(
   id: number,
-  changes: Partial<SolvedProblem>
+  changes: ProblemUpdate
 ): Promise<void> {
   await db.problems.update(id, {
     ...changes,
@@ -268,7 +268,7 @@ export async function deleteProblemWithSync(id: number): Promise<void> {
  * 导入问题（标记待同步）
  */
 export async function importProblemsWithSync(
-  problems: Omit<SolvedProblem, "id">[],
+  problems: ProblemInput[],
   clearExisting = false
 ): Promise<number> {
   if (clearExisting) {

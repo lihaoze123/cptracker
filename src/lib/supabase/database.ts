@@ -1,27 +1,33 @@
 /**
  * Supabase 数据库操作
  * 对应 IndexedDB 的 problems 表
+ *
+ * Note: Uses lazy-loaded Supabase client to avoid loading SDK for local-mode users
  */
 
-import { createClient } from "./client";
-import type { SolvedProblem } from "@/data/mock";
+import { getSupabaseClient } from "./lazy-client";
+import type {
+  SupabaseProblemDB,
+  SupabaseProblemCreate,
+} from "@/types/database.types";
+import {
+  toSupabaseCreate,
+  toSupabaseUpdate,
+  fromSupabaseProblems,
+} from "@/lib/mappers/problem-mapper";
+import type { ProblemInput, ProblemUpdate, SolvedProblem } from "@/types/domain.types";
 
-export interface SupabaseProblem {
-  id: string; // UUID
-  user_id: string;
-  题目: string;
-  题目名称?: string;
-  难度?: string;
-  题解: string;
-  关键词: string;
-  日期: string;
-  created_at: string;
-  updated_at: string;
-}
+/**
+ * Supabase 数据库模型
+ * @deprecated 直接使用 SupabaseProblemDB 类型
+ */
+export interface SupabaseProblem extends SupabaseProblemDB {}
+
+// ==================== 重新导出映射函数（保持向后兼容）====================
 
 // 转换 Supabase 格式到本地格式
 export function toLocalProblem(
-  problem: SupabaseProblem,
+  problem: SupabaseProblemDB,
   localId?: number
 ): SolvedProblem & { supabase_id: string } {
   return {
@@ -37,19 +43,35 @@ export function toLocalProblem(
 }
 
 // 转换本地格式到 Supabase 格式（不含 id 和 user_id）
-export function toSupabaseData(problem: Omit<SolvedProblem, "id">) {
-  return {
-    题目: problem.题目,
-    题目名称: problem.题目名称,
-    难度: problem.难度,
-    题解: problem.题解,
-    关键词: problem.关键词,
-    日期: problem.日期,
-  };
+export function toSupabaseData(problem: ProblemInput): SupabaseProblemCreate {
+  return toSupabaseCreate(problem);
 }
 
-export async function fetchAllProblems(): Promise<SupabaseProblem[]> {
-  const supabase = createClient();
+// ==================== 数据库操作 ====================
+
+export async function fetchAllProblems(): Promise<SolvedProblem[]> {
+  const supabase = await getSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Not authenticated");
+
+  const { data, error } = await supabase
+    .from("problems")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("日期", { ascending: false });
+
+  if (error) throw error;
+  return fromSupabaseProblems(data ?? []);
+}
+
+/**
+ * 获取原始 Supabase 数据库记录（用于同步）
+ */
+export async function fetchRawProblems(): Promise<SupabaseProblemDB[]> {
+  const supabase = await getSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -67,12 +89,31 @@ export async function fetchAllProblems(): Promise<SupabaseProblem[]> {
 }
 
 export async function insertProblem(
-  problem: Omit<SolvedProblem, "id">
-): Promise<SupabaseProblem> {
-  const supabase = createClient();
+  problem: ProblemInput
+): Promise<SolvedProblem> {
+  const supabase = await getSupabaseClient();
+  const createData = toSupabaseCreate(problem);
   const { data, error } = await supabase
     .from("problems")
-    .insert(toSupabaseData(problem))
+    .insert(createData)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return fromSupabaseProblems([data])[0];
+}
+
+/**
+ * 插入问题并返回原始 Supabase 记录（用于同步）
+ */
+export async function insertRawProblem(
+  problem: ProblemInput
+): Promise<SupabaseProblemDB> {
+  const supabase = await getSupabaseClient();
+  const createData = toSupabaseCreate(problem);
+  const { data, error } = await supabase
+    .from("problems")
+    .insert(createData)
     .select()
     .single();
 
@@ -81,12 +122,30 @@ export async function insertProblem(
 }
 
 export async function insertProblems(
-  problems: Omit<SolvedProblem, "id">[]
-): Promise<SupabaseProblem[]> {
-  const supabase = createClient();
+  problems: ProblemInput[]
+): Promise<SolvedProblem[]> {
+  const supabase = await getSupabaseClient();
+  const createData = problems.map(toSupabaseCreate);
   const { data, error } = await supabase
     .from("problems")
-    .insert(problems.map(toSupabaseData))
+    .insert(createData)
+    .select();
+
+  if (error) throw error;
+  return fromSupabaseProblems(data ?? []);
+}
+
+/**
+ * 批量插入问题并返回原始 Supabase 记录（用于同步）
+ */
+export async function insertRawProblems(
+  problems: ProblemInput[]
+): Promise<SupabaseProblemDB[]> {
+  const supabase = await getSupabaseClient();
+  const createData = problems.map(toSupabaseCreate);
+  const { data, error } = await supabase
+    .from("problems")
+    .insert(createData)
     .select();
 
   if (error) throw error;
@@ -95,29 +154,30 @@ export async function insertProblems(
 
 export async function updateProblemById(
   id: string,
-  changes: Partial<Omit<SolvedProblem, "id">>
-): Promise<SupabaseProblem> {
-  const supabase = createClient();
+  changes: ProblemUpdate
+): Promise<SolvedProblem> {
+  const supabase = await getSupabaseClient();
+  const updateData = toSupabaseUpdate(changes);
   const { data, error } = await supabase
     .from("problems")
-    .update({ ...changes, updated_at: new Date().toISOString() })
+    .update(updateData)
     .eq("id", id)
     .select()
     .single();
 
   if (error) throw error;
-  return data;
+  return fromSupabaseProblems([data])[0];
 }
 
 export async function deleteProblemById(id: string): Promise<void> {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   const { error } = await supabase.from("problems").delete().eq("id", id);
 
   if (error) throw error;
 }
 
 export async function deleteAllUserProblems(): Promise<void> {
-  const supabase = createClient();
+  const supabase = await getSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -1,53 +1,69 @@
 import Dexie, { type EntityTable } from "dexie";
-import type { SolvedProblem } from "@/data/mock";
+import type { LocalDBProblem } from "@/types/database.types";
+import {
+  toLocalDBProblem,
+  fromLocalDBProblems,
+  toLocalDBUpdate,
+} from "@/lib/mappers/problem-mapper";
+import type { ProblemInput, ProblemUpdate, SolvedProblem } from "@/types/domain.types";
+import { legacyDateStringToTimestamp } from "@/services/date-service";
 
-export interface StoredProblem extends SolvedProblem {
-  syncedAt: number;
-  supabase_id?: string; // 云端同步时的 Supabase UUID
-  pending_sync?: boolean; // 标记需要同步到云端
-  pending_delete?: boolean; // 标记需要从云端删除
-}
+/**
+ * IndexedDB 存储模型
+ * @deprecated 直接使用 LocalDBProblem 类型
+ */
+export interface StoredProblem extends LocalDBProblem {}
 
 const db = new Dexie("ProblemsDB") as Dexie & {
   problems: EntityTable<StoredProblem, "id">;
 };
 
+// Version 4: 日期字段从字符串改为时间戳（毫秒）
+db.version(4).stores({
+  problems: "++id, 难度, 日期, 题目名称, syncedAt, supabase_id, pending_sync, pending_delete",
+}).upgrade(async (tx) => {
+  // 迁移版本 3 到版本 4：将字符串日期转换为时间戳
+  await tx.table("problems").toCollection().modify((problem) => {
+    if (typeof problem.日期 === "string") {
+      problem.日期 = legacyDateStringToTimestamp(problem.日期);
+    }
+  });
+});
+
+// Version 3: 原有版本
 db.version(3).stores({
   problems: "++id, 难度, 日期, 题目名称, syncedAt, supabase_id, pending_sync, pending_delete",
 });
 
 export { db };
 
-export async function getAllProblems(): Promise<StoredProblem[]> {
-  return await db.problems.toArray();
+export async function getAllProblems(): Promise<SolvedProblem[]> {
+  const dbProblems = await db.problems.toArray();
+  return fromLocalDBProblems(dbProblems);
 }
 
 export async function addProblem(
-  problem: Omit<SolvedProblem, "id">
+  problem: ProblemInput
 ): Promise<number> {
-  const id = await db.problems.add({
-    ...problem,
-    syncedAt: Date.now(),
-  } as StoredProblem);
+  const dbProblem = toLocalDBProblem(problem);
+  const id = await db.problems.add(dbProblem as StoredProblem);
   return id as number;
 }
 
 export async function addProblems(
-  problems: Omit<SolvedProblem, "id">[]
+  problems: ProblemInput[]
 ): Promise<number> {
-  const storedProblems = problems.map((p) => ({
-    ...p,
-    syncedAt: Date.now(),
-  })) as StoredProblem[];
-  const lastKey = await db.problems.bulkAdd(storedProblems);
+  const dbProblems = problems.map(toLocalDBProblem) as StoredProblem[];
+  const lastKey = await db.problems.bulkAdd(dbProblems);
   return lastKey as number;
 }
 
 export async function updateProblem(
   id: number,
-  changes: Partial<SolvedProblem>
+  changes: ProblemUpdate
 ): Promise<void> {
-  await db.problems.update(id, { ...changes, syncedAt: Date.now() });
+  const dbUpdate = toLocalDBUpdate(changes);
+  await db.problems.update(id, dbUpdate);
 }
 
 export async function deleteProblem(id: number): Promise<void> {
@@ -59,18 +75,15 @@ export async function deleteAllProblems(): Promise<void> {
 }
 
 export async function importProblems(
-  problems: Omit<SolvedProblem, "id">[],
+  problems: ProblemInput[],
   clearExisting = false
 ): Promise<number> {
   if (clearExisting) {
     await db.problems.clear();
   }
-  const storedProblems = problems.map((p) => ({
-    ...p,
-    syncedAt: Date.now(),
-  })) as StoredProblem[];
-  await db.problems.bulkAdd(storedProblems);
-  return storedProblems.length;
+  const dbProblems = problems.map(toLocalDBProblem) as StoredProblem[];
+  await db.problems.bulkAdd(dbProblems);
+  return dbProblems.length;
 }
 
 export async function getProblemsCount(): Promise<number> {

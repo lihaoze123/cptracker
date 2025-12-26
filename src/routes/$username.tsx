@@ -1,26 +1,9 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { z } from "zod";
-import { PublicProfileView } from "@/components/public-profile-view";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/$username")({
-  validateSearch: z.object({
-    solution: z.string().optional(),
-  }),
-  component: PublicProfileRoute,
+  component: UsernameLayout,
 });
 
-function PublicProfileRoute() {
-  const navigate = useNavigate();
-  const { username } = Route.useParams();
-
-  const handleBackToHome = () => {
-    navigate({ to: "/" });
-  };
-
-  return (
-    <PublicProfileView
-      username={username}
-      onBack={handleBackToHome}
-    />
-  );
+function UsernameLayout() {
+  return <Outlet />;
 }
