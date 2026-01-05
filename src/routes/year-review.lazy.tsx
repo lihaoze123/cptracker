@@ -23,7 +23,9 @@ function YearReview() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const navigate = useNavigate();
 
-  const year = new Date().getFullYear();
+  // Before February, show previous year's review
+  const now = new Date();
+  const year = now.getMonth() < 1 ? now.getFullYear() - 1 : now.getFullYear();
 
   // Fetch profile on mount
   useEffect(() => {

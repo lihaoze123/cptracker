@@ -196,7 +196,7 @@ function Dashboard() {
               className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-8"
             >
               <Sparkles className="h-5 w-5" />
-              View {new Date().getFullYear()} Year in Review
+              View {new Date().getFullYear() - (new Date().getMonth() < 1 ? 1 : 0)} Year in Review
             </Button>
           </div>
         )}
