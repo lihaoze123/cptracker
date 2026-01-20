@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { getDifficultyLevel, DIFFICULTY_COLORS, DIFFICULTY_LABELS } from "@/components/problem-heatmaps";
 import type { SolvedProblem } from "@/data/mock";
-import { difficultyChartConfig, parseDate, type TimeRange, formatDateLabel } from "./chart-utils";
+import { difficultyChartConfig, parseDate, type TimeRange, formatDateLabel, isValidTimestamp } from "./chart-utils";
 
 interface ActivityStackedChartProps {
   problems: SolvedProblem[];
@@ -22,6 +22,9 @@ export function ActivityStackedChart({
   isLoading,
 }: ActivityStackedChartProps) {
   const data = useMemo(() => {
+    // Filter out problems with invalid dates to prevent "Invalid time value" errors
+    const validProblems = problems.filter((p) => isValidTimestamp(p.日期));
+
     const now = new Date();
     now.setHours(23, 59, 59, 999);
 
@@ -40,7 +43,7 @@ export function ActivityStackedChart({
       }
 
       return months.map(({ start, end, label }) => {
-        const monthProblems = problems.filter((p) => {
+        const monthProblems = validProblems.filter((p) => {
           const date = parseDate(p.日期);
           return date >= start && date <= end;
         });
@@ -73,7 +76,7 @@ export function ActivityStackedChart({
     }
 
     const problemsByDate: Record<string, SolvedProblem[]> = {};
-    problems.forEach((p) => {
+    validProblems.forEach((p) => {
       const date = parseDate(p.日期);
       const dateStr = date.toISOString().split("T")[0];
       if (!problemsByDate[dateStr]) {

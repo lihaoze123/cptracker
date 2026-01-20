@@ -26,8 +26,28 @@ export const difficultyChartConfig: ChartConfig = DIFFICULTY_LABELS.reduce(
   {} as ChartConfig
 );
 
+/**
+ * Check if a timestamp is valid for creating a Date object
+ * Valid timestamps are positive numbers within reasonable range
+ */
+export function isValidTimestamp(timestamp: number | undefined | null): boolean {
+  return (
+    typeof timestamp === 'number' &&
+    !isNaN(timestamp) &&
+    isFinite(timestamp) &&
+    timestamp > 0 &&
+    timestamp < 9999999999999
+  );
+}
+
 export function parseDate(timestamp: number): Date {
-  return new Date(timestamp);
+  const date = new Date(timestamp);
+  // Validate the date is not Invalid Date
+  if (isNaN(date.getTime())) {
+    // Return current date as fallback for invalid timestamps
+    return new Date();
+  }
+  return date;
 }
 
 export function filterProblemsByTimeRange(

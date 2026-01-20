@@ -75,6 +75,11 @@ export function formatTimestamp(
  */
 export function timestampToDateOnly(timestamp: number): string {
   const date = new Date(timestamp);
+  // Validate the date is not Invalid Date
+  if (isNaN(date.getTime())) {
+    // Return current date as fallback for invalid timestamps
+    return timestampToDateOnly(Date.now());
+  }
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
