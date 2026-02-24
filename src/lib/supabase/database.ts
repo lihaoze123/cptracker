@@ -21,7 +21,7 @@ import type { ProblemInput, ProblemUpdate, SolvedProblem } from "@/types/domain.
  * Supabase 数据库模型
  * @deprecated 直接使用 SupabaseProblemDB 类型
  */
-export interface SupabaseProblem extends SupabaseProblemDB {}
+export type SupabaseProblem = SupabaseProblemDB;
 
 // ==================== 重新导出映射函数（保持向后兼容）====================
 
