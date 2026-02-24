@@ -12,7 +12,7 @@ import { legacyDateStringToTimestamp } from "@/services/date-service";
  * IndexedDB 存储模型
  * @deprecated 直接使用 LocalDBProblem 类型
  */
-export interface StoredProblem extends LocalDBProblem {}
+export type StoredProblem = LocalDBProblem;
 
 const db = new Dexie("ProblemsDB") as Dexie & {
   problems: EntityTable<StoredProblem, "id">;

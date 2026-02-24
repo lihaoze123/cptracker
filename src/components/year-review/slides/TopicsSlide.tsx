@@ -10,6 +10,9 @@ interface TopicsSlideProps {
 
 const TAG_COLORS = ["#3B82F6"];
 
+// 固定随机偏移值
+const RANDOM_OFFSET = { x: 15, y: -8 };
+
 export const TopicsSlide: React.FC<TopicsSlideProps> = ({ data }) => {
   const topTag = data.topTags[0];
   const displayTags = data.topTags.slice(0, 5);
@@ -25,8 +28,8 @@ export const TopicsSlide: React.FC<TopicsSlideProps> = ({ data }) => {
               initial={{ scale: 0, x: 0, y: 0 }}
               animate={{
                 scale: [1, 1.2, 1],
-                x: [0, Math.random() * 50 - 25, 0],
-                y: [0, Math.random() * 50 - 25, 0],
+                x: [0, RANDOM_OFFSET.x, 0],
+                y: [0, RANDOM_OFFSET.y, 0],
               }}
               transition={{ duration: 4, repeat: Infinity, delay: 0.5 }}
               className="absolute rounded-full blur-[40px] opacity-70 mix-blend-screen drop-shadow-[0_0_120px_rgba(255,255,255,0.18)]"

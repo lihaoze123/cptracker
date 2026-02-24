@@ -29,7 +29,7 @@ type ToasterState = {
 
 const listeners: Array<(state: ToasterState) => void> = [];
 
-let memoryState: ToasterState = { toasts: [] };
+const memoryState: ToasterState = { toasts: [] };
 
 function dispatch(action: { type: string; toast?: ToasterToast; toastId?: string }) {
   switch (action.type) {
