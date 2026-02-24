@@ -1,6 +1,7 @@
 import { defineConfig } from 'wxt';
 import tailwindcss from "@tailwindcss/vite";
 import { OJ_HOST_PERMISSIONS } from './utils/platform-manifest';
+import packageJson from './package.json' with { type: 'json' };
 
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
@@ -10,7 +11,7 @@ export default defineConfig({
   manifest: {
     name: 'CPTracker Import',
     description: '一键从 Codeforces/AtCoder 导入题目到 CPTracker',
-    version: '1.0.0',
+    version: packageJson.version,
     permissions: [
       'storage',
       'activeTab',
