@@ -191,3 +191,67 @@ export async function deleteAllUserProblems(): Promise<void> {
 
   if (error) throw error;
 }
+
+/**
+ * 导入题目并去重：按题目 URL 合并，保留最新的日期
+ */
+export async function importProblems(
+  problems: ProblemInput[],
+  clearExisting = false
+): Promise<number> {
+  const supabase = await getSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Not authenticated");
+
+  if (clearExisting) {
+    await deleteAllUserProblems();
+    const createData = problems.map(toSupabaseCreate);
+    const { error } = await supabase.from("problems").insert(createData);
+    if (error) throw error;
+    return problems.length;
+  }
+
+  // 获取现有题目
+  const { data: existingProblems, error: fetchError } = await supabase
+    .from("problems")
+    .select("*")
+    .eq("user_id", user.id);
+
+  if (fetchError) throw fetchError;
+
+  // 按题目 URL 建立 map，保留日期最新的记录
+  const problemMap = new Map<string, ProblemInput>();
+  for (const p of existingProblems || []) {
+    const existingDate = p.日期 as number;
+    const existing = problemMap.get(p.题目);
+    if (!existing || existingDate > existing.日期) {
+      problemMap.set(p.题目, {
+        题目: p.题目,
+        题目名称: p.题目名称,
+        难度: p.难度,
+        题解: p.题解,
+        关键词: p.关键词,
+        日期: existingDate,
+      });
+    }
+  }
+
+  // 合并新题目
+  for (const problem of problems) {
+    const existing = problemMap.get(problem.题目);
+    if (!existing || problem.日期 > existing.日期) {
+      problemMap.set(problem.题目, problem);
+    }
+  }
+
+  // 清空并重新插入（因为 Supabase 不支持简单的 upsert）
+  await deleteAllUserProblems();
+  const createData = Array.from(problemMap.values()).map(toSupabaseCreate);
+  const { error: insertError } = await supabase.from("problems").insert(createData);
+  if (insertError) throw insertError;
+
+  return problemMap.size;
+}
