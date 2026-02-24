@@ -80,10 +80,37 @@ export async function importProblems(
 ): Promise<number> {
   if (clearExisting) {
     await db.problems.clear();
+    const dbProblems = problems.map(toLocalDBProblem) as StoredProblem[];
+    await db.problems.bulkAdd(dbProblems);
+    return dbProblems.length;
   }
-  const dbProblems = problems.map(toLocalDBProblem) as StoredProblem[];
-  await db.problems.bulkAdd(dbProblems);
-  return dbProblems.length;
+
+  // 去重导入：按题目 URL 合并，保留最新的日期
+  const existingProblems = await db.problems.toArray();
+  const problemMap = new Map<string, StoredProblem>();
+
+  // 先将现有题目按 URL 建立 map
+  for (const p of existingProblems) {
+    problemMap.set(p.题目, p);
+  }
+
+  // 合并新题目，保留日期更新的记录
+  for (const problem of problems) {
+    const existing = problemMap.get(problem.题目);
+    if (!existing || problem.日期 > existing.日期) {
+      const dbProblem = toLocalDBProblem(problem) as StoredProblem;
+      if (existing) {
+        // 更新现有记录
+        await db.problems.update(existing.id, dbProblem);
+      } else {
+        // 新增记录
+        await db.problems.add(dbProblem);
+      }
+      problemMap.set(problem.题目, dbProblem);
+    }
+  }
+
+  return problemMap.size;
 }
 
 export async function getProblemsCount(): Promise<number> {

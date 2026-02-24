@@ -11,6 +11,7 @@ import {
 import {
   fetchAllProblems,
   insertProblems,
+  importProblems as cloudImportProblems,
   updateProblemById,
   deleteProblemById,
   deleteAllUserProblems,
@@ -154,10 +155,7 @@ export function useProblems() {
       clearExisting?: boolean;
     }) => {
       if (isCloudMode) {
-        if (clearExisting) {
-          await deleteAllUserProblems();
-        }
-        await insertProblems(newProblems);
+        await cloudImportProblems(newProblems, clearExisting);
       } else {
         await dbImportProblems(newProblems, clearExisting);
       }
