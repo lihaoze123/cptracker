@@ -16,18 +16,22 @@ interface ImportData {
 }
 
 function createProblemInput(data: ImportData): ProblemInput {
+  // Handle both string and array types for tags
+  const tagsString = Array.isArray(data.tags)
+    ? data.tags.join(',')
+    : data.tags || '';
+
   return {
     题目: data.url,
     题目名称: data.name,
-    难度: data.rating || undefined,
-    关键词: data.tags,
+    难度: data.rating ? String(data.rating) : undefined,
+    关键词: tagsString,
     题解: data.code ? `\`\`\`${data.language || 'cpp'}\n${data.code}\n\`\`\`` : '',
     日期: data.solvedTime || Date.now(),
   };
 }
 
 export default function ImportPage() {
-  const searchParams = new URLSearchParams(window.location.search);
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [problemName, setProblemName] = useState('');
   const processedRef = useRef(false);
@@ -45,8 +49,10 @@ export default function ImportPage() {
   }, []);
 
   useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
     const source = searchParams.get('source');
     if (source !== 'extension') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus('error');
       return;
     }
@@ -78,7 +84,7 @@ export default function ImportPage() {
     window.postMessage({ type: 'REQUEST_IMPORT_DATA' }, '*');
 
     return () => window.removeEventListener('message', handleMessage);
-  }, [searchParams, addProblemFromData]);
+  }, [addProblemFromData]);
 
   if (status === 'loading') {
     return (

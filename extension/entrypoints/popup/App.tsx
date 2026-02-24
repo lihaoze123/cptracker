@@ -7,6 +7,22 @@ import { resolveSubmissionUrl as resolveSubmissionUrlByPlatform } from '../../ut
 export default function App() {
   const INTER_PAGE_DELAY_MS = 1500;
 
+  // 格式化时间戳为 datetime-local 输入格式（使用本地时区显示）
+  const formatSolvedTime = (timestamp?: number): string => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const resolveSubmissionUrl = (info: ProblemInfo): string => {
+    return resolveSubmissionUrlByPlatform(info, info.url);
+  };
+
   const [problem, setProblem] = useState<ProblemInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -55,19 +71,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, [status]);
 
-  // 格式化时间戳为 datetime-local 输入格式（使用本地时区显示）
-  const formatSolvedTime = (timestamp?: number): string => {
-    if (!timestamp) return '';
-    // 时间戳是 UTC 时间，创建 Date 时会自动转换为本地时区
-    const date = new Date(timestamp);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-  };
-
   useEffect(() => {
     Promise.all([
       storage.getItem<string>('local:clistApiKey'),
@@ -83,7 +86,7 @@ export default function App() {
     });
 
     // 添加重试机制
-    const fetchWithRetry = async (tabId: number, retries = 3): Promise<any> => {
+    const fetchWithRetry = async (tabId: number, retries = 3) => {
       for (let i = 0; i < retries; i++) {
         try {
           const response = await browser.tabs.sendMessage(tabId, { type: 'GET_PROBLEM_INFO' });
@@ -162,10 +165,6 @@ export default function App() {
       }
     });
   }, []);
-
-  const resolveSubmissionUrl = (info: ProblemInfo): string => {
-    return resolveSubmissionUrlByPlatform(info, window.location.href);
-  };
 
   const openSubmissionForCode = async () => {
     if (!problem || !formData.name.trim()) return;

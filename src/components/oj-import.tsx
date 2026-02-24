@@ -80,6 +80,7 @@ export function OJImport({ onImport }: OJImportProps) {
   const handleConfirmImport = async () => {
     if (!fetchedProblems) return;
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const problemsWithoutId = fetchedProblems.map(({ id: _, ...rest }) => rest);
     const success = await onImport(problemsWithoutId, clearOnImport);
     if (success) {

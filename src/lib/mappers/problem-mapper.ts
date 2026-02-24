@@ -88,6 +88,7 @@ export function toSupabaseCreate(problem: ProblemInput): SupabaseProblemCreate {
  * 领域模型更新 → Supabase 更新数据
  */
 export function toSupabaseUpdate(changes: ProblemUpdate): SupabaseProblemUpdate {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id, supabase_id, ...data } = changes;
   return {
     ...data,

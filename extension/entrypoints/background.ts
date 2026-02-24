@@ -2,7 +2,7 @@ import { defineBackground } from 'wxt/utils/define-background';
 
 export default defineBackground(() => {
   // 处理来自 content script 的消息
-  browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  browser.runtime.onMessage.addListener((message, sender) => {
     if (message.type === 'OPEN_TAB') {
       browser.tabs.create({ url: message.url });
     }
@@ -18,6 +18,5 @@ export default defineBackground(() => {
         });
       }
     }
-    return true;
   });
 });

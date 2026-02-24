@@ -11,11 +11,10 @@ interface StatsCardProps {
 }
 
 function useCountUp(target: number, duration: number = 1000) {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(target === 0 ? 0 : -1);
 
   useEffect(() => {
     if (target === 0) {
-      setCount(0);
       return;
     }
 

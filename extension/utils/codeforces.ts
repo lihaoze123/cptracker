@@ -39,21 +39,32 @@ function extractFromProblemPage(): ProblemInfo {
   const nameEl = document.querySelector('#pageContent > div.problemindexholder > div.ttypography > div > div.header > div.title');
   const name = normalizeProblemName(nameEl?.textContent?.trim() || '');
 
-  // Tags
+  // Tags - 通过 "Problem tags" 标题查找
   const tags: string[] = [];
-  const tagsContainer = document.querySelector('#sidebar > div:nth-child(12) > div:nth-child(2)');
-  if (tagsContainer) {
-    const tagBoxes = tagsContainer.querySelectorAll('.tag-box');
-    tags.push(...Array.from(tagBoxes).map(el => el.textContent?.trim()).filter(Boolean) as string[]);
+  const tagsHeader = Array.from(document.querySelectorAll('#sidebar .caption.titled')).find(
+    el => el.textContent?.includes('Problem tags')
+  );
+  if (tagsHeader) {
+    const tagsContainer = tagsHeader.parentElement?.querySelector(':scope > div:nth-child(2)');
+    if (tagsContainer) {
+      const tagBoxes = tagsContainer.querySelectorAll('.tag-box');
+      tags.push(...Array.from(tagBoxes).map(el => el.textContent?.trim()).filter(Boolean) as string[]);
+    }
   }
 
-  // 查找提交链接
-  const submissionEl = document.querySelector<HTMLAnchorElement>(
-    '#sidebar > div:nth-child(11) > table > tbody > tr:nth-child(2) > td.left.bottom > a, ' +
-    '#sidebar .my-submissions a, ' +
-    '#sidebar a[href*="/submission/"]'
+  // 查找提交链接 - 通过 "Last submissions" 标题查找
+  let submissionUrl = '';
+  const submissionsHeader = Array.from(document.querySelectorAll('#sidebar .caption.titled')).find(
+    el => el.textContent?.includes('Last submissions')
   );
-  const submissionUrl = submissionEl?.getAttribute('href') || '';
+  if (submissionsHeader) {
+    const table = submissionsHeader.closest('.sidebox')?.querySelector('table');
+    const acceptedRow = Array.from(table?.querySelectorAll('tr') || []).find(
+      row => row.textContent?.includes('Accepted')
+    );
+    const linkEl = acceptedRow?.querySelector('td.left a');
+    submissionUrl = linkEl?.getAttribute('href') || '';
+  }
 
   // 查找通过时间
   const solvedTime = findSolvedTime();
@@ -69,32 +80,21 @@ function extractFromProblemPage(): ProblemInfo {
 }
 
 function findSolvedTime(): number | undefined {
-  // 先尝试特定选择器
-  const specificSelectors = [
-    '#sidebar > div:nth-child(11) > table > tbody > tr:nth-child(2) > td:nth-child(2)',
-    '#sidebar > div:nth-child(12) > table > tbody > tr:nth-child(2) > td:nth-child(2)',
-  ];
-
-  for (const selector of specificSelectors) {
-    const timeEl = document.querySelector(selector);
-    const timeStr = timeEl?.textContent?.trim();
-    if (timeStr) {
-      const time = parseCFTime(timeStr);
-      if (time) return time;
-    }
-  }
-
-  // 从所有表格中查找 Accepted 的行
-  const rows = document.querySelectorAll('#sidebar table tr');
-  for (const row of Array.from(rows)) {
-    const cells = row.querySelectorAll('td');
-    const verdictCell = cells[4];
-    if (verdictCell?.textContent?.includes('Accepted')) {
+  // 通过 "Last submissions" 标题查找 Accepted 的时间
+  const submissionsHeader = Array.from(document.querySelectorAll('#sidebar .caption.titled')).find(
+    el => el.textContent?.includes('Last submissions')
+  );
+  if (submissionsHeader) {
+    const table = submissionsHeader.closest('.sidebox')?.querySelector('table');
+    const acceptedRow = Array.from(table?.querySelectorAll('tr') || []).find(
+      row => row.textContent?.includes('Accepted')
+    );
+    if (acceptedRow) {
+      const cells = acceptedRow.querySelectorAll('td');
       const timeCell = cells[1];
       const timeStr = timeCell?.textContent?.trim();
       if (timeStr) {
-        const time = parseCFTime(timeStr);
-        if (time) return time;
+        return parseCFTime(timeStr);
       }
     }
   }
@@ -103,11 +103,9 @@ function findSolvedTime(): number | undefined {
 }
 
 function extractFromSubmissionPage(): ProblemInfo {
-  // 题目链接
-  const urlEl = document.querySelector<HTMLAnchorElement>(
-    '#pageContent > div.datatable > div:nth-child(6) > table > tbody > tr.highlighted-row > td:nth-child(3) > a, ' +
-    '#sidebar > div:nth-child(11) > table > tbody > tr:nth-child(2) > td.left.bottom > a'
-  );
+  // 题目链接 - 从 highlighted row 的第3列获取
+  const highlightedRow = document.querySelector('#pageContent .datatable tr.highlighted-row');
+  const urlEl = highlightedRow?.querySelector<HTMLAnchorElement>('td:nth-child(3) a');
   const url = urlEl?.getAttribute('href') || '';
   const name = normalizeProblemName(urlEl?.textContent?.trim() || '');
 
@@ -118,7 +116,6 @@ function extractFromSubmissionPage(): ProblemInfo {
   // 通过时间和语言
   let solvedTime: number | undefined;
   let language: string | undefined;
-  const highlightedRow = document.querySelector('#pageContent > div.datatable tr.highlighted-row');
   if (highlightedRow) {
     const cells = highlightedRow.querySelectorAll('td');
     const sentCell = cells[7];
