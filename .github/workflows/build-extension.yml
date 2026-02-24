@@ -17,21 +17,23 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: extension/package-lock.json
 
       - name: Install dependencies
-        run: cd extension && npm ci
+        run: npm ci
+        working-directory: extension
 
       - name: Build extension
-        run: cd extension && npm run build
+        run: npm run build
+        working-directory: extension
 
       - name: Package as zip
         run: |
-          cd extension
           npm run zip
           npm run zip:firefox
+        working-directory: extension
 
       - name: Upload extension artifact
         uses: actions/upload-artifact@v4
@@ -39,6 +41,7 @@ jobs:
           name: extension
           path: extension/.output
           retention-days: 7
+          include-hidden-files: true
 
   release:
     needs: build
