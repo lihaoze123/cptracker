@@ -75,7 +75,7 @@ export function AddProblemSheet({ onAdd, open: controlledOpen, onOpenChange }: A
           </SheetDescription>
         </SheetHeader>
 
-        <div className="grid flex-1 auto-rows-min gap-4 px-4 py-4">
+        <div className="grid flex-1 auto-rows-min gap-4 px-4 py-4 overflow-y-auto max-h-[calc(100vh-12rem)]">
           <div className="grid gap-2">
             <Label htmlFor="problem-url">
               Problem <span className="text-destructive">*</span>
