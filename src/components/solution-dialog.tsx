@@ -50,7 +50,7 @@ function MarkdownSkeleton() {
   );
 }
 
-const solutionContentClassName = [
+export const solutionContentClassName = [
   "max-w-none text-sm leading-7 text-foreground sm:text-[15px]",
   "[&_h1]:mt-8 [&_h1:first-child]:mt-0 [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:tracking-tight",
   "[&_h2]:mt-8 [&_h2]:border-b [&_h2]:pb-2 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:tracking-tight",
