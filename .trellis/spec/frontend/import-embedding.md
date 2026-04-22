@@ -15,11 +15,17 @@
   - `GET /import?source=userscript&embedded=1&url=<current-page-url>`
 - Standalone fallback URL:
   - `GET /import?source=userscript&url=<current-page-url>`
+- First-party handoff receiver URL:
+  - `GET /import?source=userscript&handoff=1&requestId=<random-id>`
 - Legacy route compatibility:
   - `GET /import?source=extension&data=<encoded-json>`
 - Legacy message compatibility:
   - request message: `{ type: "REQUEST_IMPORT_DATA" }`
   - response message: `{ type: "CPTRACKER_IMPORT_DATA", payload: unknown }`
+- Userscript handoff messages:
+  - ready: `{ type: "CPTRACKER_IMPORT_HANDOFF_READY", source: "userscript", requestId: string }`
+  - submit: `{ type: "CPTRACKER_IMPORT_HANDOFF_SUBMIT", source: "userscript", requestId: string, payload: ProblemInput }`
+  - result: `{ type: "CPTRACKER_IMPORT_HANDOFF_RESULT", source: "userscript", requestId: string, success: boolean, importedProblemName?: string, error?: string }`
 - Userscript storage key:
   - `GM_getValue("cptracker-app-base-url")`
   - `GM_setValue("cptracker-app-base-url", normalizedBaseUrl)`
@@ -31,6 +37,10 @@
     - `extension` is legacy compatibility only and may prefill fields from `data`/`postMessage`.
   - `embedded: "1" | null`
     - `"1"` means the route is rendered inside the userscript iframe and must avoid duplicate outer page chrome.
+  - `handoff: "1" | null`
+    - `"1"` means the route is a top-level first-party receiver page that performs the real write for embedded userscript imports.
+  - `requestId: string | null`
+    - Correlates one embedded import attempt with one top-level receiver window.
   - `url: string | null`
     - When present, becomes the initial value for `题目`.
   - `data: string | null`
@@ -39,7 +49,8 @@
   - The current OJ page contributes only the current URL.
   - All other fields (`题目名称`, `难度`, `关键词`, `题解`, `日期`) are user-authored form values.
 - Persistence rule:
-  - Route components must submit through `useProblems().addProblems()`.
+  - Standalone `/import` pages submit through `useProblems().addProblems()` directly.
+  - Embedded userscript pages must hand off the final write to a top-level first-party `/import?handoff=1...` page, which then calls `useProblems().addProblems()`.
   - Route components must not import `db.ts` or storage backends directly.
 - Embedded rendering rule:
   - `embedded=1` renders form content sized for an iframe.
@@ -47,6 +58,7 @@
   - Do not introduce nested fixed-height scroll containers around the embedded form body.
 - Success-state rule:
   - Embedded success UI must provide a way to verify the result from outside the iframe flow.
+  - Embedded userscript success may only be shown after the top-level handoff page confirms the write result.
   - Keep at least one action that opens the main app directly.
 
 ### 4. Validation & Error Matrix
