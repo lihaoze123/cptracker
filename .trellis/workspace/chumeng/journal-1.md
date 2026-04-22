@@ -38,3 +38,36 @@ Filled all 6 .trellis/spec/frontend/ files with codebase-documented patterns: di
 ### Next Steps
 
 - None - task complete
+
+
+## Session 2: Replace add/edit sheet with dialog
+
+**Date**: 2026-04-22
+**Task**: Replace add/edit sheet with dialog
+**Branch**: `main`
+
+### Summary
+
+Replaced Sheet-based add/edit problem forms with centered Dialog cards. Updated layout with side-by-side name/difficulty fields and proper overflow handling.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f56e62f` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
