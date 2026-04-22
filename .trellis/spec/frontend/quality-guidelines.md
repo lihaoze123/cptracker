@@ -59,7 +59,7 @@ No automated test framework is configured. Quality is verified through:
 2. **`npm run lint`** — ESLint checks
 3. **`npm run build`** — Full build pipeline (generate routes → type check → bundle)
 
-For UI changes, verify manually in the dev server (`npm run dev`).
+For UI changes, verify manually in the dev server (`npm run dev`). In this repo, do not add or rely on browser/E2E verification from Claude; the user performs final UI validation personally.
 
 ---
 
@@ -70,5 +70,5 @@ For UI changes, verify manually in the dev server (`npm run dev`).
 - [ ] `tsc -b` passes with no errors
 - [ ] `npm run lint` passes
 - [ ] `npm run build` succeeds
-- [ ] UI verified in dev server for visual/functional changes
+- [ ] UI changes handed off for user manual verification (do not use Claude-driven browser/E2E checks)
 - [ ] Storage mode switching works (local ↔ cloud) if data layer changed
