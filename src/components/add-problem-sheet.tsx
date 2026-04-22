@@ -10,15 +10,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TagsInput } from "@/components/tags-input";
 import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import type { SolvedProblem } from "@/data/mock";
@@ -60,22 +60,22 @@ export function AddProblemSheet({ onAdd, open: controlledOpen, onOpenChange }: A
   }, [form.formData.题目]);
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="h-8">
           <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" />
           Add Problem
         </Button>
-      </SheetTrigger>
-      <SheetContent className="sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>Add New Problem</SheetTitle>
-          <SheetDescription>
+      </DialogTrigger>
+      <DialogContent className="max-h-[85vh] gap-0 overflow-hidden p-0 sm:max-w-xl">
+        <DialogHeader className="border-b px-6 py-5 pr-14">
+          <DialogTitle>Add New Problem</DialogTitle>
+          <DialogDescription>
             Add a new solved problem to your collection.
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-        <div className="grid flex-1 auto-rows-min gap-4 px-4 py-4 overflow-y-auto max-h-[calc(100vh-12rem)]">
+        <div className="grid max-h-[calc(85vh-9.5rem)] auto-rows-min gap-5 overflow-y-auto px-6 py-5">
           <div className="grid gap-2">
             <Label htmlFor="problem-url">
               Problem <span className="text-destructive">*</span>
@@ -96,30 +96,32 @@ export function AddProblemSheet({ onAdd, open: controlledOpen, onOpenChange }: A
             )}
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="problem-name">Problem Name</Label>
-            <Input
-              id="problem-name"
-              placeholder="Problem title (optional)"
-              value={form.formData.题目名称}
-              onChange={(e) => form.handleChange("题目名称", e.target.value)}
-            />
-          </div>
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,180px)] sm:items-start sm:gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="problem-name">Problem Name</Label>
+              <Input
+                id="problem-name"
+                placeholder="Problem title (optional)"
+                value={form.formData.题目名称}
+                onChange={(e) => form.handleChange("题目名称", e.target.value)}
+              />
+            </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="difficulty">
-              Difficulty
-            </Label>
-            <Input
-              id="difficulty"
-              type="number"
-              placeholder="1600"
-              value={form.formData.难度}
-              onChange={(e) => form.handleChange("难度", e.target.value)}
-            />
-            {form.errors.难度 && (
-              <p className="text-xs text-destructive">{form.errors.难度}</p>
-            )}
+            <div className="grid gap-2">
+              <Label htmlFor="difficulty">
+                Difficulty
+              </Label>
+              <Input
+                id="difficulty"
+                type="number"
+                placeholder="1600"
+                value={form.formData.难度}
+                onChange={(e) => form.handleChange("难度", e.target.value)}
+              />
+              {form.errors.难度 && (
+                <p className="text-xs text-destructive">{form.errors.难度}</p>
+              )}
+            </div>
           </div>
 
           <div className="grid gap-2">
@@ -155,15 +157,15 @@ export function AddProblemSheet({ onAdd, open: controlledOpen, onOpenChange }: A
           </div>
         </div>
 
-        <SheetFooter>
+        <DialogFooter className="border-t px-6 py-4 sm:justify-end">
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
           <Button onClick={() => form.handleSubmit()} disabled={form.isSubmitting}>
             {form.isSubmitting ? "Adding..." : "Add Problem"}
           </Button>
-          <SheetClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </SheetClose>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

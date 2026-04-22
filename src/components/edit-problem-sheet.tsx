@@ -9,14 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TagsInput } from "@/components/tags-input";
 import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type { SolvedProblem } from "@/data/mock";
 import { extractProblemInfo } from "@/lib/problem-utils";
 import { useProblemForm } from "@/components/features/forms/hooks/use-problem-form";
@@ -57,16 +57,16 @@ export function EditProblemSheet({
   }, [form.formData.题目]);
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>Edit Problem</SheetTitle>
-          <SheetDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[85vh] gap-0 overflow-hidden p-0 sm:max-w-xl">
+        <DialogHeader className="border-b px-6 py-5 pr-14">
+          <DialogTitle>Edit Problem</DialogTitle>
+          <DialogDescription>
             Modify the problem information.
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-        <div className="grid flex-1 auto-rows-min gap-4 px-4 py-4 overflow-y-auto max-h-[calc(100vh-12rem)]">
+        <div className="grid max-h-[calc(85vh-9.5rem)] auto-rows-min gap-5 overflow-y-auto px-6 py-5">
           <div className="grid gap-2">
             <Label htmlFor="edit-problem-url">
               Problem<span className="text-destructive">*</span>
@@ -87,30 +87,32 @@ export function EditProblemSheet({
             )}
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="edit-problem-name">Problem Name</Label>
-            <Input
-              id="edit-problem-name"
-              placeholder="Problem title (optional)"
-              value={form.formData.题目名称}
-              onChange={(e) => form.handleChange("题目名称", e.target.value)}
-            />
-          </div>
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,180px)] sm:items-start sm:gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="edit-problem-name">Problem Name</Label>
+              <Input
+                id="edit-problem-name"
+                placeholder="Problem title (optional)"
+                value={form.formData.题目名称}
+                onChange={(e) => form.handleChange("题目名称", e.target.value)}
+              />
+            </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="edit-difficulty">
-              Difficulty
-            </Label>
-            <Input
-              id="edit-difficulty"
-              type="number"
-              placeholder="1600"
-              value={form.formData.难度}
-              onChange={(e) => form.handleChange("难度", e.target.value)}
-            />
-            {form.errors.难度 && (
-              <p className="text-xs text-destructive">{form.errors.难度}</p>
-            )}
+            <div className="grid gap-2">
+              <Label htmlFor="edit-difficulty">
+                Difficulty
+              </Label>
+              <Input
+                id="edit-difficulty"
+                type="number"
+                placeholder="1600"
+                value={form.formData.难度}
+                onChange={(e) => form.handleChange("难度", e.target.value)}
+              />
+              {form.errors.难度 && (
+                <p className="text-xs text-destructive">{form.errors.难度}</p>
+              )}
+            </div>
           </div>
 
           <div className="grid gap-2">
@@ -146,15 +148,15 @@ export function EditProblemSheet({
           </div>
         </div>
 
-        <SheetFooter>
+        <DialogFooter className="border-t px-6 py-4 sm:justify-end">
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
           <Button onClick={() => form.handleSubmit()} disabled={form.isSubmitting}>
             {form.isSubmitting ? "Saving..." : "Save Changes"}
           </Button>
-          <SheetClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </SheetClose>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
