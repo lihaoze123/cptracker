@@ -20,6 +20,7 @@ This directory contains guidelines for frontend development, documented from act
 | [State Management](./state-management.md) | TanStack Query, Zustand, nuqs | Done |
 | [Quality Guidelines](./quality-guidelines.md) | ESLint, TypeScript, code review checklist | Done |
 | [Type Safety](./type-safety.md) | Domain types, mappers, Zod validation | Done |
+| [Import Embedding Contract](./import-embedding.md) | Userscript handoff into `/import` and embedded route rules | Done |
 
 ---
 
