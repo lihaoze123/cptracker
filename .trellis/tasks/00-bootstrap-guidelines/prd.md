@@ -5,7 +5,7 @@
 Welcome to Trellis! This is your first task.
 
 AI agents use `.trellis/spec/` to understand YOUR project's coding conventions.
-**Empty templates = AI writes generic code that doesn't match your project style.**
+**Starting from scratch = AI writes generic code that doesn't match your project style.**
 
 Filling these guidelines is a one-time setup that pays off for every future AI session.
 
@@ -44,7 +44,7 @@ Many projects already have coding conventions documented. **Check these first** 
 | File / Directory | Tool |
 |------|------|
 | `CLAUDE.md` / `CLAUDE.local.md` | Claude Code |
-| `AGENTS.md` | Claude Code |
+| `AGENTS.md` | Codex / Claude Code / agent-compatible tools |
 | `.cursorrules` | Cursor |
 | `.cursor/rules/*.mdc` | Cursor (rules directory) |
 | `.windsurfrules` | Windsurf |

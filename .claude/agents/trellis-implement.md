@@ -1,9 +1,8 @@
 ---
-name: implement
+name: trellis-implement
 description: |
   Code implementation expert. Understands specs and requirements, then implements features. No git commit allowed.
 tools: Read, Write, Edit, Bash, Glob, Grep, mcp__exa__web_search_exa, mcp__exa__get_code_context_exa
-model: opus
 ---
 # Implement Agent
 
@@ -41,9 +40,8 @@ Before implementing, read:
 
 Read relevant specs based on task type:
 
-- Backend: `.trellis/spec/backend/`
-- Frontend: `.trellis/spec/frontend/`
-- Guides: `.trellis/spec/guides/`
+- Spec layers: `.trellis/spec/<package>/<layer>/`
+- Shared guides: `.trellis/spec/guides/`
 
 ### 2. Understand Requirements
 

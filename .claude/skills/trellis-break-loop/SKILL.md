@@ -1,6 +1,11 @@
+---
+name: trellis-break-loop
+description: "Deep bug analysis to break the fix-forget-repeat cycle. Analyzes root cause category, why fixes failed, prevention mechanisms, and captures knowledge into specs. Use after fixing a bug to prevent the same class of bugs."
+---
+
 # Break the Loop - Deep Bug Analysis
 
-When debug is complete, use this command for deep analysis to break the "fix bug -> forget -> repeat" cycle.
+When debug is complete, use this for deep analysis to break the "fix bug -> forget -> repeat" cycle.
 
 ---
 
@@ -37,7 +42,7 @@ What mechanisms would prevent this from happening again?
 |------|-------------|---------|
 | **Documentation** | Write it down so people know | Update thinking guide |
 | **Architecture** | Make the error impossible structurally | Type-safe wrappers |
-| **Compile-time** | TypeScript strict, no any | Signature change causes compile error |
+| **Compile-time** | Strict type checking, no escape hatches | Signature change causes compile error |
 | **Runtime** | Monitoring, alerts, scans | Detect orphan entities |
 | **Test Coverage** | E2E tests, integration tests | Verify full flow |
 | **Code Review** | Checklist, PR template | "Did you check X?" |
@@ -56,10 +61,10 @@ What broader problems does this bug reveal?
 Solidify insights into the system:
 
 - [ ] Update `.trellis/spec/guides/` thinking guides
-- [ ] Update `.trellis/spec/backend/` or `frontend/` docs
+- [ ] Update relevant `.trellis/spec/` docs
 - [ ] Create issue record (if applicable)
 - [ ] Create feature ticket for root fix
-- [ ] Update check commands if needed
+- [ ] Update check guidelines if needed
 
 ---
 

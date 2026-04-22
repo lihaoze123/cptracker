@@ -1,6 +1,11 @@
+---
+name: trellis-update-spec
+description: "Captures executable contracts and coding conventions into .trellis/spec/ documents. Use when learning something valuable from debugging, implementing, or discussion that should be preserved for future sessions."
+---
+
 # Update Code-Spec - Capture Executable Contracts
 
-When you learn something valuable (from debugging, implementing, or discussion), use this command to update the relevant code-spec documents.
+When you learn something valuable (from debugging, implementing, or discussion), use this to update the relevant code-spec documents.
 
 **Timing**: After completing a task, fixing a bug, or discovering a new pattern
 
@@ -40,13 +45,13 @@ For triggered tasks, include all sections below:
 
 | Trigger | Example | Target Spec |
 |---------|---------|-------------|
-| **Implemented a feature** | Added template download with giget | Relevant `backend/` or `frontend/` file |
-| **Made a design decision** | Used type field + mapping table for extensibility | Relevant code-spec + "Design Decisions" section |
-| **Fixed a bug** | Found a subtle issue with error handling | `backend/error-handling.md` |
-| **Discovered a pattern** | Found a better way to structure code | Relevant `backend/` or `frontend/` file |
-| **Hit a gotcha** | Learned that X must be done before Y | Relevant code-spec + "Common Mistakes" section |
-| **Established a convention** | Team agreed on naming pattern | `quality-guidelines.md` |
-| **New thinking trigger** | "Don't forget to check X before doing Y" | `guides/*.md` (as a checklist item, not detailed rules) |
+| **Implemented a feature** | Added a new integration or module | Relevant spec file |
+| **Made a design decision** | Chose extensibility pattern over simplicity | Relevant spec + "Design Decisions" section |
+| **Fixed a bug** | Found a subtle issue with error handling | Relevant spec (e.g., error-handling docs) |
+| **Discovered a pattern** | Found a better way to structure code | Relevant spec file |
+| **Hit a gotcha** | Learned that X must be done before Y | Relevant spec + "Common Mistakes" section |
+| **Established a convention** | Team agreed on naming pattern | Quality guidelines |
+| **New thinking trigger** | "Don't forget to check X before doing Y" | `guides/*.md` (as a checklist item) |
 
 **Key Insight**: Code-spec updates are NOT just for problems. Every feature implementation contains design decisions and contracts that future AI/developers need to execute safely.
 
@@ -56,10 +61,7 @@ For triggered tasks, include all sections below:
 
 ```
 .trellis/spec/
-├── backend/           # Backend coding standards
-│   ├── index.md       # Overview and links
-│   └── *.md           # Topic-specific guidelines
-├── frontend/          # Frontend coding standards
+├── <layer>/           # Per-layer coding standards (e.g., backend/, frontend/, api/)
 │   ├── index.md       # Overview and links
 │   └── *.md           # Topic-specific guidelines
 └── guides/            # Thinking checklists (NOT coding specs!)
@@ -71,20 +73,20 @@ For triggered tasks, include all sections below:
 
 | Type | Location | Purpose | Content Style |
 |------|----------|---------|---------------|
-| **Code-Spec** | `backend/*.md`, `frontend/*.md` | Tell AI "how to implement safely" | Signatures, contracts, matrices, cases, test points |
+| **Code-Spec** | `<layer>/*.md` | Tell AI "how to implement safely" | Signatures, contracts, matrices, cases, test points |
 | **Guide** | `guides/*.md` | Help AI "what to think about" | Checklists, questions, pointers to specs |
 
 **Decision Rule**: Ask yourself:
 
-- "This is **how to write** the code" → Put in `backend/` or `frontend/`
+- "This is **how to write** the code" → Put in a spec layer directory
 - "This is **what to consider** before writing" → Put in `guides/`
 
 **Example**:
 
 | Learning | Wrong Location | Correct Location |
 |----------|----------------|------------------|
-| "Use `reconfigure()` not `TextIOWrapper` for Windows stdout" | ❌ `guides/cross-platform-thinking-guide.md` | ✅ `backend/script-conventions.md` |
-| "Remember to check encoding when writing cross-platform code" | ❌ `backend/script-conventions.md` | ✅ `guides/cross-platform-thinking-guide.md` |
+| "Use API X not API Y for this task" | ❌ `guides/` (too specific for a thinking guide) | ✅ Relevant spec file (concrete convention) |
+| "Remember to check X when doing Y" | ❌ Spec file (too abstract for a spec) | ✅ `guides/` (thinking checklist) |
 
 **Guides should be short checklists that point to specs**, not duplicate the detailed rules.
 
@@ -339,7 +341,7 @@ Development Flow:
 ```
 
 - `/trellis:break-loop` - Analyzes bugs deeply, often reveals spec updates needed
-- `/trellis:update-spec` - Actually makes the updates (this command)
+- `/trellis:update-spec` - Actually makes the updates
 - `/trellis:finish-work` - Reminds you to check if specs need updates
 
 ---

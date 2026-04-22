@@ -1,9 +1,8 @@
 ---
-name: check
+name: trellis-check
 description: |
   Code quality check expert. Reviews code changes against specs and self-fixes issues.
 tools: Read, Write, Edit, Bash, Glob, Grep, mcp__exa__web_search_exa, mcp__exa__get_code_context_exa
-model: opus
 ---
 # Check Agent
 
@@ -65,32 +64,6 @@ If failed, fix issues and re-run.
 
 ---
 
-## Completion Markers (Ralph Loop)
-
-**CRITICAL**: You are in a loop controlled by the Ralph Loop system.
-The loop will NOT stop until you output ALL required completion markers.
-
-Completion markers are generated from `check.jsonl` in the task directory.
-Each entry's `reason` field becomes a marker: `{REASON}_FINISH`
-
-For example, if check.jsonl contains:
-```json
-{"file": "...", "reason": "TypeCheck"}
-{"file": "...", "reason": "Lint"}
-{"file": "...", "reason": "CodeReview"}
-```
-
-You MUST output these markers when each check passes:
-- `TYPECHECK_FINISH` - After typecheck passes
-- `LINT_FINISH` - After lint passes
-- `CODEREVIEW_FINISH` - After code review passes
-
-If check.jsonl doesn't exist or has no reasons, output: `ALL_CHECKS_FINISH`
-
-**The loop will block you from stopping until all markers are present in your output.**
-
----
-
 ## Report Format
 
 ```markdown
@@ -112,11 +85,10 @@ If check.jsonl doesn't exist or has no reasons, output: `ALL_CHECKS_FINISH`
 
 ### Verification Results
 
-- TypeCheck: Passed TYPECHECK_FINISH
-- Lint: Passed LINT_FINISH
+- TypeCheck: Passed
+- Lint: Passed
 
 ### Summary
 
 Checked X files, found Y issues, all fixed.
-ALL_CHECKS_FINISH
 ```

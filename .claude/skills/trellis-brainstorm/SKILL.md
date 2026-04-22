@@ -1,3 +1,8 @@
+---
+name: trellis-brainstorm
+description: "Guides collaborative requirements discovery before implementation. Creates task directory, seeds PRD, asks high-value questions one at a time, researches technical choices, and converges on MVP scope. Use when requirements are unclear, there are multiple valid approaches, or the user describes a new feature or complex task."
+---
+
 # Brainstorm - Requirements Discovery (AI Coding Enhanced)
 
 Guide AI through collaborative requirements discovery **before implementation**, optimized for AI coding workflows:
@@ -11,7 +16,7 @@ Guide AI through collaborative requirements discovery **before implementation**,
 
 ## When to Use
 
-Triggered from `/trellis:start` when the user describes a development task, especially when:
+Triggered from /trellis:start when the user describes a development task, especially when:
 
 * requirements are unclear or evolving
 * there are multiple valid implementation paths
