@@ -15,6 +15,7 @@ import type {
   SupabaseProblemCreate,
   SupabaseProblemUpdate,
 } from "@/types/database.types";
+import { isValidTimestamp, legacyDateStringToTimestamp } from "@/services/date-service";
 
 // ==================== IndexedDB 映射 ====================
 
@@ -70,6 +71,14 @@ export function toLocalDBUpdate(changes: ProblemUpdate): Partial<LocalDBProblem>
 
 // ==================== Supabase 映射 ====================
 
+function normalizeDateForSupabase(date: number | string): number {
+  if (typeof date === "number") {
+    return isValidTimestamp(date) ? date : Date.now();
+  }
+
+  return legacyDateStringToTimestamp(date);
+}
+
 /**
  * 领域模型 → Supabase 创建数据
  */
@@ -80,7 +89,7 @@ export function toSupabaseCreate(problem: ProblemInput): SupabaseProblemCreate {
     难度: problem.难度,
     题解: problem.题解,
     关键词: problem.关键词,
-    日期: problem.日期,
+    日期: normalizeDateForSupabase(problem.日期),
   };
 }
 
@@ -89,9 +98,10 @@ export function toSupabaseCreate(problem: ProblemInput): SupabaseProblemCreate {
  */
 export function toSupabaseUpdate(changes: ProblemUpdate): SupabaseProblemUpdate {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { id, supabase_id, ...data } = changes;
+  const { id, supabase_id, 日期, ...data } = changes;
   return {
     ...data,
+    ...(日期 === undefined ? {} : { 日期: normalizeDateForSupabase(日期) }),
     updated_at: new Date().toISOString(),
   } as SupabaseProblemUpdate;
 }
@@ -137,7 +147,7 @@ export function localDBToSupabaseCreate(dbProblem: LocalDBProblem): SupabaseProb
     难度: dbProblem.难度,
     题解: dbProblem.题解,
     关键词: dbProblem.关键词,
-    日期: dbProblem.日期,
+    日期: normalizeDateForSupabase(dbProblem.日期),
   };
 }
 
