@@ -22,7 +22,7 @@ import { CloudDownloadIcon } from "@hugeicons/core-free-icons";
 import { fetchCodeforces, fetchAtCoder, fetchLuogu } from "@/services/oj";
 import type { SolvedProblem } from "@/data/mock";
 
-type OJType = "codeforces" | "atcoder" | "luogu" | "qoj";
+type OJType = "codeforces" | "atcoder" | "luogu" | "userscript";
 
 interface OJImportProps {
   onImport: (problems: Omit<SolvedProblem, "id">[], clearExisting: boolean) => Promise<boolean>;
@@ -100,7 +100,7 @@ export function OJImport({ onImport }: OJImportProps) {
     codeforces: "Codeforces",
     atcoder: "AtCoder",
     luogu: "洛谷",
-    qoj: "QOJ",
+    userscript: "油猴脚本",
   };
 
   return (
@@ -137,12 +137,12 @@ export function OJImport({ onImport }: OJImportProps) {
                   <SelectItem value="codeforces">Codeforces</SelectItem>
                   <SelectItem value="atcoder">AtCoder</SelectItem>
                   <SelectItem value="luogu">洛谷</SelectItem>
-                  <SelectItem value="qoj">QOJ (油猴脚本)</SelectItem>
+                  <SelectItem value="userscript">通用题面导入（油猴脚本）</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {selectedOJ !== "qoj" && (
+            {selectedOJ !== "userscript" && (
             <div className="space-y-2">
               <label className="text-sm font-medium">用户名</label>
               <div className="flex gap-2">
@@ -198,13 +198,10 @@ export function OJImport({ onImport }: OJImportProps) {
               </div>
             )}
 
-            {selectedOJ === "qoj" && (
+            {selectedOJ === "userscript" && (
               <div className="space-y-3 rounded-lg border border-muted bg-muted/30 p-4">
                 <div>
-                  <h4 className="text-sm font-medium">QOJ 有 Cloudflare 防护，需要使用油猴脚本导出</h4>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    由于 QOJ 启用了 Cloudflare 人机验证，无法直接抓取。请按以下步骤操作：
-                  </p>
+                  <h4 className="text-sm font-medium">使用油猴脚本在题面页打开 CP Tracker 导入表单，方便手动添加题目</h4>
                 </div>
 
                 <ol className="ml-4 list-decimal space-y-2 text-xs text-muted-foreground">
@@ -228,9 +225,9 @@ export function OJImport({ onImport }: OJImportProps) {
                     </a>
                   </li>
                   <li>
-                    安装 QOJ 导出脚本：
+                    安装导入脚本：
                     <a
-                      href="/qoj-export.user.js"
+                      href="/cptracker-import.user.js"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="ml-1 rounded bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
@@ -238,18 +235,12 @@ export function OJImport({ onImport }: OJImportProps) {
                       点击安装脚本
                     </a>
                   </li>
-                  <li>访问 QOJ 提交页面并登录</li>
-                  <li>访问 <code className="rounded bg-muted px-1 py-0.5 text-xs">/submissions?submitter=你的用户名&min_score=100</code></li>
-                  <li>点击页面上的「导出 AC 题目」按钮</li>
-                  <li>将下载的 CSV 文件导入到 CPTracker（使用「从 CSV 导入」功能）</li>
+                  <li>打开受支持的 OJ 题目页面</li>
+                  <li>点击页面上的「Import Problem」按钮</li>
+                  <li>首次使用时先配置 CP Tracker 的站点地址</li>
+                  <li>脚本会打开一个导入表单，自动带入题目链接</li>
+                  <li>其余字段手动填写并提交</li>
                 </ol>
-
-                <div className="rounded-md bg-yellow-50 border border-yellow-200 p-3 dark:bg-yellow-900/20 dark:border-yellow-800">
-                  <p className="text-xs text-yellow-800 dark:text-yellow-200">
-                    <span className="font-semibold">提示：</span>
-                    脚本会自动遍历所有分页并去重，保留最早的 AC 时间。
-                  </p>
-                </div>
               </div>
             )}
 

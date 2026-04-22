@@ -9,6 +9,7 @@ lerna-debug.log*
 
 node_modules
 dist
+public/cptracker-import.user.js
 dist-ssr
 *.local
 
