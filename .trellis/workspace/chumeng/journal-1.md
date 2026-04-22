@@ -137,3 +137,36 @@ Completed the solution reading and editing UX work, including the fullscreen/car
 ### Next Steps
 
 - None - task complete
+
+
+## Session 5: Add SolutionEditor with Write/Preview and split-pane layout
+
+**Date**: 2026-04-22
+**Task**: Add SolutionEditor with Write/Preview and split-pane layout
+**Branch**: `main`
+
+### Summary
+
+Implemented shared SolutionEditor component with Write/Preview tabs and code/math snippet insertion. Integrated into add/edit dialogs with fullscreen split-pane layout. Quality check passed — lint/typecheck/build green.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `fe73553` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

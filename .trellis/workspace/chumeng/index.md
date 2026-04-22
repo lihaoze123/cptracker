@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 4
+- **Total Sessions**: 5
 - **Last Active**: 2026-04-22
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~139 | Active |
+| `journal-1.md` | ~172 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 5 | 2026-04-22 | Add SolutionEditor with Write/Preview and split-pane layout | `fe73553` | `main` |
 | 4 | 2026-04-22 | Complete solution reading editing UX | `b91da07` | `main` |
 | 3 | 2026-04-22 | Add fullscreen/card mode toggle to problem dialogs | `72a2483` | `main` |
 | 2 | 2026-04-22 | Replace add/edit sheet with dialog | `f56e62f` | `main` |

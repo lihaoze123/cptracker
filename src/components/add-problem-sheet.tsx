@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TagsInput } from "@/components/tags-input";
+import { SolutionEditor } from "@/components/features/forms/solution-editor";
 import {
   Dialog,
   DialogClose,
@@ -82,13 +83,13 @@ export function AddProblemSheet({ onAdd, open: controlledOpen, onOpenChange }: A
       </DialogTrigger>
       <DialogContent
         className={cn(
-          "gap-0 overflow-hidden p-0",
+          "flex flex-col gap-0 overflow-hidden p-0",
           isFullscreen
             ? "h-dvh max-h-dvh w-dvw max-w-dvw translate-x-0 translate-y-0 rounded-none sm:max-w-dvw top-0 left-0"
             : "max-h-[85vh] sm:max-w-xl"
         )}
       >
-        <DialogHeader className="border-b px-6 py-5 pr-24">
+        <DialogHeader className={cn("border-b px-6 pr-24", isFullscreen ? "py-2.5" : "py-5")}>
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 space-y-1">
               <DialogTitle>Add New Problem</DialogTitle>
@@ -109,92 +110,161 @@ export function AddProblemSheet({ onAdd, open: controlledOpen, onOpenChange }: A
           </div>
         </DialogHeader>
 
-        <div
-          className={cn(
-            "grid auto-rows-min gap-5 overflow-y-auto px-6 py-5",
-            isFullscreen ? "max-h-[calc(100dvh-9.5rem)]" : "max-h-[calc(85vh-9.5rem)]"
-          )}
-        >
-          <div className="grid gap-2">
-            <Label htmlFor="problem-url">
-              Problem <span className="text-destructive">*</span>
-            </Label>
-            <Textarea
-              id="problem-url"
-              placeholder="https://codeforces.com/contest/1234/problem/A"
-              value={form.formData.题目}
-              onChange={(e) => form.handleChange("题目", e.target.value)}
-            />
-            {parsedProblem && (
-              <p className="text-xs text-muted-foreground">
-                {parsedProblem.source}: <span className="font-medium text-foreground">{parsedProblem.name}</span>
-              </p>
-            )}
-            {form.errors.题目 && (
-              <p className="text-xs text-destructive">{form.errors.题目}</p>
-            )}
-          </div>
+        {isFullscreen ? (
+          <div className="flex min-h-0 min-w-0 flex-1">
+            <div className="flex w-72 shrink-0 flex-col gap-3 overflow-y-auto border-r px-5 py-4">
+              <div className="grid gap-1.5">
+                <Label htmlFor="problem-url" className="text-xs">
+                  Problem <span className="text-destructive">*</span>
+                </Label>
+                <Textarea
+                  id="problem-url"
+                  placeholder="https://codeforces.com/contest/1234/problem/A"
+                  value={form.formData.题目}
+                  onChange={(e) => form.handleChange("题目", e.target.value)}
+                />
+                {parsedProblem && (
+                  <p className="text-xs text-muted-foreground">
+                    {parsedProblem.source}: <span className="font-medium text-foreground">{parsedProblem.name}</span>
+                  </p>
+                )}
+                {form.errors.题目 && (
+                  <p className="text-xs text-destructive">{form.errors.题目}</p>
+                )}
+              </div>
 
-          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,180px)] sm:items-start sm:gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="problem-name">Problem Name</Label>
-              <Input
-                id="problem-name"
-                placeholder="Problem title (optional)"
-                value={form.formData.题目名称}
-                onChange={(e) => form.handleChange("题目名称", e.target.value)}
-              />
+              <div className="grid gap-1.5">
+                <Label htmlFor="problem-name" className="text-xs">Problem Name</Label>
+                <Input
+                  id="problem-name"
+                  placeholder="Problem title (optional)"
+                  value={form.formData.题目名称}
+                  onChange={(e) => form.handleChange("题目名称", e.target.value)}
+                />
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label htmlFor="difficulty" className="text-xs">Difficulty</Label>
+                <Input
+                  id="difficulty"
+                  type="number"
+                  placeholder="1600"
+                  value={form.formData.难度}
+                  onChange={(e) => form.handleChange("难度", e.target.value)}
+                />
+                {form.errors.难度 && (
+                  <p className="text-xs text-destructive">{form.errors.难度}</p>
+                )}
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label htmlFor="tags" className="text-xs">Tags</Label>
+                <TagsInput
+                  value={form.formData.关键词}
+                  onChange={(value) => form.handleChange("关键词", value)}
+                  suggestions={form.allTags}
+                  placeholder="Add tags..."
+                />
+              </div>
+
+              <div className="grid gap-1.5">
+                <Label htmlFor="date" className="text-xs">AC Time</Label>
+                <Input
+                  id="date"
+                  type="datetime-local"
+                  value={ProblemService.timestampToInputDate(form.formData.日期)}
+                  onChange={(e) =>
+                    form.handleChange("日期", ProblemService.inputDateToTimestamp(e.target.value))
+                  }
+                />
+              </div>
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="difficulty">
-                Difficulty
-              </Label>
-              <Input
-                id="difficulty"
-                type="number"
-                placeholder="1600"
-                value={form.formData.难度}
-                onChange={(e) => form.handleChange("难度", e.target.value)}
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col py-4 pr-6 pl-5">
+              <SolutionEditor
+                id="solution"
+                value={form.formData.题解}
+                onChange={(value) => form.handleChange("题解", value)}
               />
-              {form.errors.难度 && (
-                <p className="text-xs text-destructive">{form.errors.难度}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex min-h-0 flex-col gap-3 overflow-y-auto px-6 py-5 max-h-[calc(85vh-9.5rem)]">
+            <div className="grid gap-1.5">
+              <Label htmlFor="problem-url" className="text-xs">
+                Problem <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="problem-url"
+                placeholder="https://codeforces.com/contest/1234/problem/A"
+                value={form.formData.题目}
+                onChange={(e) => form.handleChange("题目", e.target.value)}
+              />
+              {parsedProblem && (
+                <p className="text-xs text-muted-foreground">
+                  {parsedProblem.source}: <span className="font-medium text-foreground">{parsedProblem.name}</span>
+                </p>
+              )}
+              {form.errors.题目 && (
+                <p className="text-xs text-destructive">{form.errors.题目}</p>
               )}
             </div>
-          </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="solution">Solution</Label>
-            <Textarea
+            <div className="grid gap-1.5 sm:grid-cols-[minmax(0,1fr)_minmax(0,140px)] sm:items-start sm:gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="problem-name" className="text-xs">Problem Name</Label>
+                <Input
+                  id="problem-name"
+                  placeholder="Problem title (optional)"
+                  value={form.formData.题目名称}
+                  onChange={(e) => form.handleChange("题目名称", e.target.value)}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="difficulty" className="text-xs">Difficulty</Label>
+                <Input
+                  id="difficulty"
+                  type="number"
+                  placeholder="1600"
+                  value={form.formData.难度}
+                  onChange={(e) => form.handleChange("难度", e.target.value)}
+                />
+                {form.errors.难度 && (
+                  <p className="text-xs text-destructive">{form.errors.难度}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid gap-1.5 sm:grid-cols-2 sm:gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="tags" className="text-xs">Tags</Label>
+                <TagsInput
+                  value={form.formData.关键词}
+                  onChange={(value) => form.handleChange("关键词", value)}
+                  suggestions={form.allTags}
+                  placeholder="Add tags..."
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="date" className="text-xs">AC Time</Label>
+                <Input
+                  id="date"
+                  type="datetime-local"
+                  value={ProblemService.timestampToInputDate(form.formData.日期)}
+                  onChange={(e) =>
+                    form.handleChange("日期", ProblemService.inputDateToTimestamp(e.target.value))
+                  }
+                />
+              </div>
+            </div>
+
+            <SolutionEditor
               id="solution"
-              placeholder="https://github.com/user/solutions/..."
               value={form.formData.题解}
-              onChange={(e) => form.handleChange("题解", e.target.value)}
+              onChange={(value) => form.handleChange("题解", value)}
             />
           </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="tags">Tags</Label>
-            <TagsInput
-              value={form.formData.关键词}
-              onChange={(value) => form.handleChange("关键词", value)}
-              suggestions={form.allTags}
-              placeholder="Add tags..."
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="date">AC Time</Label>
-            <Input
-              id="date"
-              type="datetime-local"
-              value={ProblemService.timestampToInputDate(form.formData.日期)}
-              onChange={(e) =>
-                form.handleChange("日期", ProblemService.inputDateToTimestamp(e.target.value))
-              }
-            />
-          </div>
-        </div>
+        )}
 
         <DialogFooter className="border-t px-6 py-4 sm:justify-end">
           <DialogClose asChild>
