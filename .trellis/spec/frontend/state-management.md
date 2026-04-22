@@ -61,6 +61,26 @@ Used for TanStack Table state (pagination, sorting, filters). Type-safe search p
 
 Form state, component-level toggles, derived data via `useMemo`.
 
+### Pattern: Reset transient dialog state on close
+
+Dialog-local presentation state such as card/fullscreen mode should stay in `useState` and reset whenever the dialog closes. Route all close paths through the same open-change helper so overlay click, Escape, cancel, and successful submit all produce the same reset behavior.
+
+```tsx
+const [isFullscreen, setIsFullscreen] = useState(false);
+
+const handleOpenChange = (nextOpen: boolean) => {
+  if (!nextOpen) {
+    setIsFullscreen(false);
+  }
+
+  onOpenChange(nextOpen);
+};
+
+<Dialog open={open} onOpenChange={handleOpenChange} />
+```
+
+**Why**: transient presentation state should not leak across opens, and submit-success close paths are easy to miss if reset logic only lives in one button handler.
+
 ---
 
 ## When to Use Global State

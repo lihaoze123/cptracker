@@ -1,0 +1,4 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend development guide"}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Dialog component structure and controlled/uncontrolled patterns"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Use local component state for per-dialog mode toggles"}
