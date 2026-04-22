@@ -29,7 +29,7 @@ function RootComponent() {
   const pageTitle = currentNav?.title ?? "Page";
 
   // Fullscreen routes without sidebar
-  const isFullscreenRoute = currentPath === "/year-review";
+  const isFullscreenRoute = currentPath === "/year-review" || currentPath === "/import";
 
   if (isFullscreenRoute) {
     return (

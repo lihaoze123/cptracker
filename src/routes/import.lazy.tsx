@@ -1,130 +1,190 @@
-import { createLazyFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { createLazyFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, X } from "lucide-react";
-import { addProblem } from "@/lib/db";
-import type { ProblemInput } from "@/types/domain.types";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ProblemFormFields } from "@/components/features/forms/problem-form-fields";
+import { useProblemForm } from "@/components/features/forms/hooks/use-problem-form";
+import { useProblems } from "@/hooks/use-problems-queries";
+import { parseImportMessagePayload, parseImportRouteState } from "@/lib/import-source";
+import type { ProblemFormInitialValues } from "@/components/features/forms/hooks/use-problem-form";
+import { cn } from "@/lib/utils";
 
-interface ImportData {
-  url: string;
-  name: string;
-  rating?: number;
-  tags?: string[];
-  code?: string;
-  language?: string;
-  solvedTime?: number;
-}
+function ImportPage() {
+  const routeState = useMemo(
+    () => parseImportRouteState(new URLSearchParams(window.location.search)),
+    []
+  );
+  const { addProblems } = useProblems();
+  const [submissionState, setSubmissionState] = useState<"editing" | "success">("editing");
+  const [importedProblemName, setImportedProblemName] = useState("");
+  const [messageInitialValues, setMessageInitialValues] = useState<ProblemFormInitialValues | null>(null);
 
-function createProblemInput(data: ImportData): ProblemInput {
-  // Handle both string and array types for tags
-  const tagsString = Array.isArray(data.tags)
-    ? data.tags.join(',')
-    : data.tags || '';
+  const initialValues = useMemo(
+    () => ({
+      ...routeState.initialValues,
+      ...messageInitialValues,
+      题目: messageInitialValues?.题目 || routeState.initialValues.题目 || "",
+    }),
+    [messageInitialValues, routeState.initialValues]
+  );
 
-  return {
-    题目: data.url,
-    题目名称: data.name,
-    难度: data.rating ? String(data.rating) : undefined,
-    关键词: tagsString,
-    题解: data.code ? `\`\`\`${data.language || 'cpp'}\n${data.code}\n\`\`\`` : '',
-    日期: data.solvedTime || Date.now(),
-  };
-}
-
-export default function ImportPage() {
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [problemName, setProblemName] = useState('');
-  const processedRef = useRef(false);
-
-  const addProblemFromData = useCallback((data: ImportData) => {
-    const problem = createProblemInput(data);
-    addProblem(problem)
-      .then(() => {
-        setProblemName(data.name);
-        setStatus('success');
-      })
-      .catch(() => {
-        setStatus('error');
-      });
-  }, []);
+  const form = useProblemForm({
+    mode: "add",
+    initialValues,
+    onSubmit: async (data) => {
+      const success = await addProblems([data]);
+      if (success) {
+        setImportedProblemName(data.题目名称 || data.题目);
+        setSubmissionState("success");
+      }
+      return success;
+    },
+  });
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const source = searchParams.get('source');
-    if (source !== 'extension') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setStatus('error');
+    if (routeState.source !== "extension") {
       return;
     }
 
-    if (processedRef.current) return;
-    processedRef.current = true;
-
-    // 优先从 URL 参数读取数据
-    const dataParam = searchParams.get('data');
-    if (dataParam) {
-      try {
-        const data = JSON.parse(decodeURIComponent(atob(dataParam))) as ImportData;
-        addProblemFromData(data);
-        return;
-      } catch (e) {
-        console.error('Failed to parse URL data:', e);
-      }
-    }
-
-    // 后备：从 content script 获取数据
     const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'CPTRACKER_IMPORT_DATA') {
-        const data = event.data.payload as ImportData;
-        addProblemFromData(data);
+      if (event.data?.type !== "CPTRACKER_IMPORT_DATA") {
+        return;
       }
+
+      setMessageInitialValues(parseImportMessagePayload(event.data.payload));
     };
 
-    window.addEventListener('message', handleMessage);
-    window.postMessage({ type: 'REQUEST_IMPORT_DATA' }, '*');
+    window.addEventListener("message", handleMessage);
+    window.postMessage({ type: "REQUEST_IMPORT_DATA" }, "*");
 
-    return () => window.removeEventListener('message', handleMessage);
-  }, [addProblemFromData]);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [routeState.source]);
 
-  if (status === 'loading') {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">正在导入题目...</p>
-        </div>
-      </div>
+  if (submissionState === "success") {
+    return routeState.embedded ? (
+      <ImportEmbeddedSuccess importedProblemName={importedProblemName} />
+    ) : (
+      <ImportPageLayout embedded={false}>
+        <Card className="w-full max-w-xl py-0">
+          <CardContent className="flex flex-col items-center gap-4 px-6 py-10 text-center">
+            <CheckCircle2 className="size-12 text-green-500" />
+            <div className="space-y-1">
+              <h1 className="text-lg font-medium">题目已添加</h1>
+              <p className="text-xs text-muted-foreground break-all">{importedProblemName}</p>
+            </div>
+          </CardContent>
+          <CardFooter className="justify-center gap-2 border-t px-6 py-4">
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              再导入一题
+            </Button>
+            <Button asChild>
+              <Link to="/">返回首页</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+      </ImportPageLayout>
     );
   }
 
-  if (status === 'error') {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center space-y-4">
-          <p className="text-destructive">导入失败，请重试</p>
-          <Button onClick={() => window.location.href = '/'}>返回首页</Button>
-        </div>
-      </div>
-    );
-  }
+  return routeState.embedded ? (
+    <ImportEmbeddedPage form={form} />
+  ) : (
+    <ImportPageLayout embedded={false}>
+      <Card className="w-full max-w-3xl py-0">
+        <CardHeader className="border-b px-6 py-5">
+          <CardTitle>Import Problem</CardTitle>
+          <CardDescription>
+            当前题目链接来自 OJ 页面，其余信息全部以你在此表单中的输入为准。
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="px-0 py-0">
+          <ProblemFormFields form={form} idPrefix="import-problem" />
+        </CardContent>
+        <CardFooter className="justify-end gap-2 border-t px-6 py-4">
+          <Button asChild variant="outline">
+            <Link to="/">取消</Link>
+          </Button>
+          <Button onClick={() => form.handleSubmit()} disabled={form.isSubmitting}>
+            {form.isSubmitting ? "Importing..." : "Import Problem"}
+          </Button>
+        </CardFooter>
+      </Card>
+    </ImportPageLayout>
+  );
+}
 
+function ImportEmbeddedPage({
+  form,
+}: {
+  form: ReturnType<typeof useProblemForm>;
+}) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-background">
-      <CheckCircle2 className="w-16 h-16 text-green-500" />
-      <h1 className="text-2xl font-bold">题目已添加!</h1>
-      <p className="text-muted-foreground">{problemName}</p>
-
-      <div className="flex gap-4 mt-4">
-        <Button variant="outline" onClick={() => window.close()}>
-          <X className="w-4 h-4 mr-2" />
-          关闭页面
+    <div className="flex h-full min-h-0 flex-col bg-background text-foreground">
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <ProblemFormFields form={form} idPrefix="import-problem" embedded />
+      </div>
+      <div className="flex justify-end border-t px-6 py-4">
+        <Button onClick={() => form.handleSubmit()} disabled={form.isSubmitting}>
+          {form.isSubmitting ? "Importing..." : "Import Problem"}
         </Button>
-        <Button onClick={() => window.location.href = '/'}>查看题目</Button>
       </div>
     </div>
   );
 }
 
-export const Route = createLazyFileRoute('/import')({
+function ImportEmbeddedSuccess({
+  importedProblemName,
+}: {
+  importedProblemName: string;
+}) {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-6 text-center text-foreground">
+      <CheckCircle2 className="size-12 text-green-500" />
+      <div className="space-y-1">
+        <h1 className="text-lg font-medium">题目已添加</h1>
+        <p className="break-all text-xs text-muted-foreground">{importedProblemName}</p>
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          再导入一题
+        </Button>
+        <Button asChild>
+          <a href="/" target="_blank" rel="noreferrer">
+            打开 CP Tracker
+          </a>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function ImportPageLayout({
+  embedded,
+  children,
+}: {
+  embedded: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        "min-h-screen bg-background text-foreground",
+        embedded ? "h-screen overflow-hidden" : "container mx-auto flex min-h-screen items-center justify-center px-4 py-8"
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+export const Route = createLazyFileRoute("/import")({
   component: ImportPage,
 });

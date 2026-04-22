@@ -4,8 +4,13 @@
   "version": "0.1.1",
   "type": "module",
   "scripts": {
+    "predev": "npm run prepare:userscript",
     "dev": "vite",
     "generate": "tsr generate",
+    "build:extension": "npm --prefix ./extension run build",
+    "sync:userscript": "node ./scripts/sync-userscript.mjs",
+    "prepare:userscript": "npm run build:extension && npm run sync:userscript",
+    "prebuild": "npm run prepare:userscript",
     "build": "tsr generate && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

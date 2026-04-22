@@ -170,3 +170,36 @@ Implemented shared SolutionEditor component with Write/Preview tabs and code/mat
 ### Next Steps
 
 - None - task complete
+
+
+## Session 6: Rebuild import userscript workflow
+
+**Date**: 2026-04-23
+**Task**: Rebuild import userscript workflow
+**Branch**: `main`
+
+### Summary
+
+Replaced the old extension import flow with a vite-plugin-monkey userscript overlay, moved import UI onto the shared /import route, extracted shared problem form fields, documented the embedded import contract, and narrowed userscript match rules to problem pages.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `0a96804` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
