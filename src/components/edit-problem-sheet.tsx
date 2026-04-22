@@ -2,7 +2,7 @@
  * Edit Problem Sheet Component
  * Form for editing existing problems
  */
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +17,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { FullScreenIcon, Menu01Icon } from "@hugeicons/core-free-icons";
 import type { SolvedProblem } from "@/data/mock";
+import { cn } from "@/lib/utils";
 import { extractProblemInfo } from "@/lib/problem-utils";
 import { useProblemForm } from "@/components/features/forms/hooks/use-problem-form";
 import { ProblemService } from "@/services/problem-service";
@@ -35,6 +38,16 @@ export function EditProblemSheet({
   onOpenChange,
   onEdit,
 }: EditProblemSheetProps) {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setIsFullscreen(false);
+    }
+
+    onOpenChange(nextOpen);
+  };
+
   const form = useProblemForm({
     mode: "edit",
     initialProblem: problem,
@@ -42,7 +55,7 @@ export function EditProblemSheet({
       if (!problem) return false;
       const success = await onEdit(problem.id, changes);
       if (success) {
-        onOpenChange(false);
+        handleOpenChange(false);
       }
       return success;
     },
@@ -57,16 +70,42 @@ export function EditProblemSheet({
   }, [form.formData.题目]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] gap-0 overflow-hidden p-0 sm:max-w-xl">
-        <DialogHeader className="border-b px-6 py-5 pr-14">
-          <DialogTitle>Edit Problem</DialogTitle>
-          <DialogDescription>
-            Modify the problem information.
-          </DialogDescription>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent
+        className={cn(
+          "gap-0 overflow-hidden p-0",
+          isFullscreen
+            ? "h-dvh max-h-dvh w-dvw max-w-dvw translate-x-0 translate-y-0 rounded-none sm:max-w-dvw top-0 left-0"
+            : "max-h-[85vh] sm:max-w-xl"
+        )}
+      >
+        <DialogHeader className="border-b px-6 py-5 pr-24">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 space-y-1">
+              <DialogTitle>Edit Problem</DialogTitle>
+              <DialogDescription>
+                Modify the problem information.
+              </DialogDescription>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => setIsFullscreen((value) => !value)}
+            >
+              <HugeiconsIcon icon={isFullscreen ? Menu01Icon : FullScreenIcon} data-icon="inline-start" />
+              {isFullscreen ? "Card Mode" : "Fullscreen"}
+            </Button>
+          </div>
         </DialogHeader>
 
-        <div className="grid max-h-[calc(85vh-9.5rem)] auto-rows-min gap-5 overflow-y-auto px-6 py-5">
+        <div
+          className={cn(
+            "grid auto-rows-min gap-5 overflow-y-auto px-6 py-5",
+            isFullscreen ? "max-h-[calc(100dvh-9.5rem)]" : "max-h-[calc(85vh-9.5rem)]"
+          )}
+        >
           <div className="grid gap-2">
             <Label htmlFor="edit-problem-url">
               Problem<span className="text-destructive">*</span>

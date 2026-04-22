@@ -2,8 +2,7 @@
  * Add Problem Sheet Component
  * Form for adding new solved problems
  */
-import { useState } from "react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,8 +19,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, FullScreenIcon, Menu01Icon } from "@hugeicons/core-free-icons";
 import type { SolvedProblem } from "@/data/mock";
+import { cn } from "@/lib/utils";
 import { extractProblemInfo } from "@/lib/problem-utils";
 import { useProblemForm } from "@/components/features/forms/hooks/use-problem-form";
 import { ProblemService } from "@/services/problem-service";
@@ -34,9 +34,22 @@ interface AddProblemSheetProps {
 
 export function AddProblemSheet({ onAdd, open: controlledOpen, onOpenChange }: AddProblemSheetProps) {
   const [internalOpen, setInternalOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
-  const setOpen = isControlled ? (onOpenChange ?? (() => {})) : setInternalOpen;
+
+  const setOpen = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setIsFullscreen(false);
+    }
+
+    if (isControlled) {
+      onOpenChange?.(nextOpen);
+      return;
+    }
+
+    setInternalOpen(nextOpen);
+  };
 
   const form = useProblemForm({
     mode: "add",
@@ -67,15 +80,41 @@ export function AddProblemSheet({ onAdd, open: controlledOpen, onOpenChange }: A
           Add Problem
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[85vh] gap-0 overflow-hidden p-0 sm:max-w-xl">
-        <DialogHeader className="border-b px-6 py-5 pr-14">
-          <DialogTitle>Add New Problem</DialogTitle>
-          <DialogDescription>
-            Add a new solved problem to your collection.
-          </DialogDescription>
+      <DialogContent
+        className={cn(
+          "gap-0 overflow-hidden p-0",
+          isFullscreen
+            ? "h-dvh max-h-dvh w-dvw max-w-dvw translate-x-0 translate-y-0 rounded-none sm:max-w-dvw top-0 left-0"
+            : "max-h-[85vh] sm:max-w-xl"
+        )}
+      >
+        <DialogHeader className="border-b px-6 py-5 pr-24">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 space-y-1">
+              <DialogTitle>Add New Problem</DialogTitle>
+              <DialogDescription>
+                Add a new solved problem to your collection.
+              </DialogDescription>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => setIsFullscreen((value) => !value)}
+            >
+              <HugeiconsIcon icon={isFullscreen ? Menu01Icon : FullScreenIcon} data-icon="inline-start" />
+              {isFullscreen ? "Card Mode" : "Fullscreen"}
+            </Button>
+          </div>
         </DialogHeader>
 
-        <div className="grid max-h-[calc(85vh-9.5rem)] auto-rows-min gap-5 overflow-y-auto px-6 py-5">
+        <div
+          className={cn(
+            "grid auto-rows-min gap-5 overflow-y-auto px-6 py-5",
+            isFullscreen ? "max-h-[calc(100dvh-9.5rem)]" : "max-h-[calc(85vh-9.5rem)]"
+          )}
+        >
           <div className="grid gap-2">
             <Label htmlFor="problem-url">
               Problem <span className="text-destructive">*</span>
