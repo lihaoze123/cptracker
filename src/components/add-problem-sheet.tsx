@@ -2,26 +2,26 @@
  * Add Problem Sheet Component
  * Form for adding new solved problems
  */
-import { useState } from "react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TagsInput } from "@/components/tags-input";
 import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon } from "@hugeicons/core-free-icons";
+import { Add01Icon, FullScreenIcon, Menu01Icon } from "@hugeicons/core-free-icons";
 import type { SolvedProblem } from "@/data/mock";
+import { cn } from "@/lib/utils";
 import { extractProblemInfo } from "@/lib/problem-utils";
 import { useProblemForm } from "@/components/features/forms/hooks/use-problem-form";
 import { ProblemService } from "@/services/problem-service";
@@ -34,9 +34,22 @@ interface AddProblemSheetProps {
 
 export function AddProblemSheet({ onAdd, open: controlledOpen, onOpenChange }: AddProblemSheetProps) {
   const [internalOpen, setInternalOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
-  const setOpen = isControlled ? (onOpenChange ?? (() => {})) : setInternalOpen;
+
+  const setOpen = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setIsFullscreen(false);
+    }
+
+    if (isControlled) {
+      onOpenChange?.(nextOpen);
+      return;
+    }
+
+    setInternalOpen(nextOpen);
+  };
 
   const form = useProblemForm({
     mode: "add",
@@ -60,22 +73,48 @@ export function AddProblemSheet({ onAdd, open: controlledOpen, onOpenChange }: A
   }, [form.formData.题目]);
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="h-8">
           <HugeiconsIcon icon={Add01Icon} data-icon="inline-start" />
           Add Problem
         </Button>
-      </SheetTrigger>
-      <SheetContent className="sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>Add New Problem</SheetTitle>
-          <SheetDescription>
-            Add a new solved problem to your collection.
-          </SheetDescription>
-        </SheetHeader>
+      </DialogTrigger>
+      <DialogContent
+        className={cn(
+          "gap-0 overflow-hidden p-0",
+          isFullscreen
+            ? "h-dvh max-h-dvh w-dvw max-w-dvw translate-x-0 translate-y-0 rounded-none sm:max-w-dvw top-0 left-0"
+            : "max-h-[85vh] sm:max-w-xl"
+        )}
+      >
+        <DialogHeader className="border-b px-6 py-5 pr-24">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 space-y-1">
+              <DialogTitle>Add New Problem</DialogTitle>
+              <DialogDescription>
+                Add a new solved problem to your collection.
+              </DialogDescription>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => setIsFullscreen((value) => !value)}
+            >
+              <HugeiconsIcon icon={isFullscreen ? Menu01Icon : FullScreenIcon} data-icon="inline-start" />
+              {isFullscreen ? "Card Mode" : "Fullscreen"}
+            </Button>
+          </div>
+        </DialogHeader>
 
-        <div className="grid flex-1 auto-rows-min gap-4 px-4 py-4 overflow-y-auto max-h-[calc(100vh-12rem)]">
+        <div
+          className={cn(
+            "grid auto-rows-min gap-5 overflow-y-auto px-6 py-5",
+            isFullscreen ? "max-h-[calc(100dvh-9.5rem)]" : "max-h-[calc(85vh-9.5rem)]"
+          )}
+        >
           <div className="grid gap-2">
             <Label htmlFor="problem-url">
               Problem <span className="text-destructive">*</span>
@@ -96,30 +135,32 @@ export function AddProblemSheet({ onAdd, open: controlledOpen, onOpenChange }: A
             )}
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="problem-name">Problem Name</Label>
-            <Input
-              id="problem-name"
-              placeholder="Problem title (optional)"
-              value={form.formData.题目名称}
-              onChange={(e) => form.handleChange("题目名称", e.target.value)}
-            />
-          </div>
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,180px)] sm:items-start sm:gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="problem-name">Problem Name</Label>
+              <Input
+                id="problem-name"
+                placeholder="Problem title (optional)"
+                value={form.formData.题目名称}
+                onChange={(e) => form.handleChange("题目名称", e.target.value)}
+              />
+            </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="difficulty">
-              Difficulty
-            </Label>
-            <Input
-              id="difficulty"
-              type="number"
-              placeholder="1600"
-              value={form.formData.难度}
-              onChange={(e) => form.handleChange("难度", e.target.value)}
-            />
-            {form.errors.难度 && (
-              <p className="text-xs text-destructive">{form.errors.难度}</p>
-            )}
+            <div className="grid gap-2">
+              <Label htmlFor="difficulty">
+                Difficulty
+              </Label>
+              <Input
+                id="difficulty"
+                type="number"
+                placeholder="1600"
+                value={form.formData.难度}
+                onChange={(e) => form.handleChange("难度", e.target.value)}
+              />
+              {form.errors.难度 && (
+                <p className="text-xs text-destructive">{form.errors.难度}</p>
+              )}
+            </div>
           </div>
 
           <div className="grid gap-2">
@@ -155,15 +196,15 @@ export function AddProblemSheet({ onAdd, open: controlledOpen, onOpenChange }: A
           </div>
         </div>
 
-        <SheetFooter>
+        <DialogFooter className="border-t px-6 py-4 sm:justify-end">
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
           <Button onClick={() => form.handleSubmit()} disabled={form.isSubmitting}>
             {form.isSubmitting ? "Adding..." : "Add Problem"}
           </Button>
-          <SheetClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </SheetClose>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

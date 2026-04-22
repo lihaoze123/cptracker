@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Multi-Agent Pipeline Context Injection Hook
+Multi-Platform Sub-Agent Context Injection Hook
+
+Injects task-specific context when sub-agents (implement, check, research) are spawned.
 
 Core Design Philosophy:
-- Dispatch becomes a pure dispatcher, only responsible for "calling subagents"
 - Hook is responsible for injecting all context, subagent works autonomously with complete info
 - Each agent has a dedicated jsonl file defining its context
 - No resume needed, no segmentation, behavior controlled by code not prompt
@@ -14,9 +15,6 @@ Trigger: PreToolUse (before Task tool call)
 Context Source: .trellis/.current-task points to task directory
 - implement.jsonl - Implement agent dedicated context
 - check.jsonl     - Check agent dedicated context
-- debug.jsonl     - Debug agent dedicated context
-- research.jsonl  - Research agent dedicated context (optional, usually not needed)
-- cr.jsonl        - Code review dedicated context
 - prd.md          - Requirements document
 - info.md         - Technical design
 - codex-review-output.txt - Code Review results
@@ -40,33 +38,28 @@ if sys.platform == "win32":
     elif hasattr(sys.stdout, "detach"):
         sys.stdout = _io.TextIOWrapper(sys.stdout.detach(), encoding="utf-8", errors="replace")  # type: ignore[union-attr]
 
+
 # =============================================================================
 # Path Constants (change here to rename directories)
 # =============================================================================
 
 DIR_WORKFLOW = ".trellis"
-DIR_WORKSPACE = "workspace"
-DIR_TASKS = "tasks"
 DIR_SPEC = "spec"
 FILE_CURRENT_TASK = ".current-task"
 FILE_TASK_JSON = "task.json"
-
-# Agents that don't update phase (can be called at any time)
-AGENTS_NO_PHASE_UPDATE = {"debug", "research"}
 
 # =============================================================================
 # Subagent Constants (change here to rename subagent types)
 # =============================================================================
 
-AGENT_IMPLEMENT = "implement"
-AGENT_CHECK = "check"
-AGENT_DEBUG = "debug"
-AGENT_RESEARCH = "research"
+AGENT_IMPLEMENT = "trellis-implement"
+AGENT_CHECK = "trellis-check"
+AGENT_RESEARCH = "trellis-research"
 
 # Agents that require a task directory
-AGENTS_REQUIRE_TASK = (AGENT_IMPLEMENT, AGENT_CHECK, AGENT_DEBUG)
+AGENTS_REQUIRE_TASK = (AGENT_IMPLEMENT, AGENT_CHECK)
 # All supported agents
-AGENTS_ALL = (AGENT_IMPLEMENT, AGENT_CHECK, AGENT_DEBUG, AGENT_RESEARCH)
+AGENTS_ALL = (AGENT_IMPLEMENT, AGENT_CHECK, AGENT_RESEARCH)
 
 
 def find_repo_root(start_path: str) -> str | None:
@@ -99,66 +92,16 @@ def get_current_task(repo_root: str) -> str | None:
     try:
         with open(current_task_file, "r", encoding="utf-8") as f:
             content = f.read().strip()
-            return content if content else None
+            if not content:
+                return None
+            normalized = content.replace("\\", "/")
+            while normalized.startswith("./"):
+                normalized = normalized[2:]
+            if normalized.startswith("tasks/"):
+                normalized = f".trellis/{normalized}"
+            return normalized
     except Exception:
         return None
-
-
-def update_current_phase(repo_root: str, task_dir: str, subagent_type: str) -> None:
-    """
-    Update current_phase in task.json based on subagent_type.
-
-    This ensures phase tracking is always accurate, regardless of whether
-    dispatch agent remembers to update it.
-
-    Logic:
-    - Read next_action array from task.json
-    - Find the next phase whose action matches subagent_type
-    - Only move forward, never backward
-    - Some agents (debug, research) don't update phase
-    """
-    if subagent_type in AGENTS_NO_PHASE_UPDATE:
-        return
-
-    task_json_path = os.path.join(repo_root, task_dir, FILE_TASK_JSON)
-    if not os.path.exists(task_json_path):
-        return
-
-    try:
-        with open(task_json_path, "r", encoding="utf-8") as f:
-            task_data = json.load(f)
-
-        current_phase = task_data.get("current_phase", 0)
-        next_actions = task_data.get("next_action", [])
-
-        # Map action names to subagent types
-        # "implement" -> "implement", "check" -> "check", "finish" -> "check"
-        action_to_agent = {
-            "implement": "implement",
-            "check": "check",
-            "finish": "check",  # finish uses check agent
-        }
-
-        # Find the next phase that matches this subagent_type
-        new_phase = None
-        for action in next_actions:
-            phase_num = action.get("phase", 0)
-            action_name = action.get("action", "")
-            expected_agent = action_to_agent.get(action_name)
-
-            # Only consider phases after current_phase
-            if phase_num > current_phase and expected_agent == subagent_type:
-                new_phase = phase_num
-                break
-
-        if new_phase is not None:
-            task_data["current_phase"] = new_phase
-
-            with open(task_json_path, "w", encoding="utf-8") as f:
-                json.dump(task_data, f, indent=2, ensure_ascii=False)
-    except Exception:
-        # Don't fail the hook if phase update fails
-        pass
 
 
 def read_file_content(base_path: str, file_path: str) -> str | None:
@@ -264,24 +207,17 @@ def read_jsonl_entries(base_path: str, jsonl_path: str) -> list[tuple[str, str]]
     return results
 
 
+
+
 def get_agent_context(repo_root: str, task_dir: str, agent_type: str) -> str:
     """
-    Get complete context for specified agent
-
-    Prioritize agent-specific jsonl, fallback to spec.jsonl if not exists
+    Get context from {agent_type}.jsonl for the specified agent.
+    Only reads implement.jsonl or check.jsonl (the two JSONL files the task system creates).
     """
     context_parts = []
 
-    # 1. Try agent-specific jsonl
     agent_jsonl = f"{task_dir}/{agent_type}.jsonl"
-    agent_entries = read_jsonl_entries(repo_root, agent_jsonl)
-
-    # 2. If agent-specific jsonl doesn't exist or empty, fallback to spec.jsonl
-    if not agent_entries:
-        agent_entries = read_jsonl_entries(repo_root, f"{task_dir}/spec.jsonl")
-
-    # 3. Add all files from jsonl
-    for file_path, content in agent_entries:
+    for file_path, content in read_jsonl_entries(repo_root, agent_jsonl):
         context_parts.append(f"=== {file_path} ===\n{content}")
 
     return "\n\n".join(context_parts)
@@ -298,7 +234,7 @@ def get_implement_context(repo_root: str, task_dir: str) -> str:
     """
     context_parts = []
 
-    # 1. Read implement.jsonl (or fallback to spec.jsonl)
+    # 1. Read implement.jsonl
     base_context = get_agent_context(repo_root, task_dir, "implement")
     if base_context:
         context_parts.append(base_context)
@@ -320,135 +256,27 @@ def get_implement_context(repo_root: str, task_dir: str) -> str:
 
 def get_check_context(repo_root: str, task_dir: str) -> str:
     """
-    Complete context for Check Agent
-
-    Read order:
-    1. All files in check.jsonl (check specs + dev specs)
-    2. prd.md (for understanding task intent)
+    Context for Check Agent: check.jsonl + prd.md
     """
     context_parts = []
 
-    # 1. Read check.jsonl (or fallback to spec.jsonl + hardcoded check files)
-    check_entries = read_jsonl_entries(repo_root, f"{task_dir}/check.jsonl")
+    for file_path, content in read_jsonl_entries(repo_root, f"{task_dir}/check.jsonl"):
+        context_parts.append(f"=== {file_path} ===\n{content}")
 
-    if check_entries:
-        for file_path, content in check_entries:
-            context_parts.append(f"=== {file_path} ===\n{content}")
-    else:
-        # Fallback: use hardcoded check files + spec.jsonl
-        check_files = [
-            (".claude/commands/trellis/finish-work.md", "Finish work checklist"),
-            (".claude/commands/trellis/check-cross-layer.md", "Cross-layer check spec"),
-            (".claude/commands/trellis/check-backend.md", "Backend check spec"),
-            (".claude/commands/trellis/check-frontend.md", "Frontend check spec"),
-        ]
-        for file_path, description in check_files:
-            content = read_file_content(repo_root, file_path)
-            if content:
-                context_parts.append(f"=== {file_path} ({description}) ===\n{content}")
-
-        # Add spec.jsonl
-        spec_entries = read_jsonl_entries(repo_root, f"{task_dir}/spec.jsonl")
-        for file_path, content in spec_entries:
-            context_parts.append(f"=== {file_path} (Dev spec) ===\n{content}")
-
-    # 2. Requirements document (for understanding task intent)
     prd_content = read_file_content(repo_root, f"{task_dir}/prd.md")
     if prd_content:
-        context_parts.append(
-            f"=== {task_dir}/prd.md (Requirements - for understanding intent) ===\n{prd_content}"
-        )
+        context_parts.append(f"=== {task_dir}/prd.md (Requirements) ===\n{prd_content}")
 
     return "\n\n".join(context_parts)
 
 
 def get_finish_context(repo_root: str, task_dir: str) -> str:
     """
-    Complete context for Finish phase (final check before PR)
-
-    Read order:
-    1. All files in finish.jsonl (if exists)
-    2. Fallback to finish-work.md only (lightweight final check)
-    3. update-spec.md (for active spec sync)
-    4. prd.md (for verifying requirements are met)
+    Context for Finish phase: reuses check.jsonl + prd.md
+    (Finish is a final check, same context source.)
     """
-    context_parts = []
+    return get_check_context(repo_root, task_dir)
 
-    # 1. Try finish.jsonl first
-    finish_entries = read_jsonl_entries(repo_root, f"{task_dir}/finish.jsonl")
-
-    if finish_entries:
-        for file_path, content in finish_entries:
-            context_parts.append(f"=== {file_path} ===\n{content}")
-    else:
-        # Fallback: only finish-work.md (lightweight)
-        finish_work = read_file_content(
-            repo_root, ".claude/commands/trellis/finish-work.md"
-        )
-        if finish_work:
-            context_parts.append(
-                f"=== .claude/commands/trellis/finish-work.md (Finish checklist) ===\n{finish_work}"
-            )
-
-    # 2. Spec update process (for active spec sync)
-    update_spec = read_file_content(
-        repo_root, ".claude/commands/trellis/update-spec.md"
-    )
-    if update_spec:
-        context_parts.append(
-            f"=== .claude/commands/trellis/update-spec.md (Spec update process) ===\n{update_spec}"
-        )
-
-    # 3. Requirements document (for verifying requirements are met)
-    prd_content = read_file_content(repo_root, f"{task_dir}/prd.md")
-    if prd_content:
-        context_parts.append(
-            f"=== {task_dir}/prd.md (Requirements - verify all met) ===\n{prd_content}"
-        )
-
-    return "\n\n".join(context_parts)
-
-
-def get_debug_context(repo_root: str, task_dir: str) -> str:
-    """
-    Complete context for Debug Agent
-
-    Read order:
-    1. All files in debug.jsonl (specs needed for fixing)
-    2. codex-review-output.txt (Codex Review results)
-    """
-    context_parts = []
-
-    # 1. Read debug.jsonl (or fallback to spec.jsonl + hardcoded check files)
-    debug_entries = read_jsonl_entries(repo_root, f"{task_dir}/debug.jsonl")
-
-    if debug_entries:
-        for file_path, content in debug_entries:
-            context_parts.append(f"=== {file_path} ===\n{content}")
-    else:
-        # Fallback: use spec.jsonl + hardcoded check files
-        spec_entries = read_jsonl_entries(repo_root, f"{task_dir}/spec.jsonl")
-        for file_path, content in spec_entries:
-            context_parts.append(f"=== {file_path} (Dev spec) ===\n{content}")
-
-        check_files = [
-            (".claude/commands/trellis/check-backend.md", "Backend check spec"),
-            (".claude/commands/trellis/check-frontend.md", "Frontend check spec"),
-            (".claude/commands/trellis/check-cross-layer.md", "Cross-layer check spec"),
-        ]
-        for file_path, description in check_files:
-            content = read_file_content(repo_root, file_path)
-            if content:
-                context_parts.append(f"=== {file_path} ({description}) ===\n{content}")
-
-    # 2. Codex review output (if exists)
-    codex_output = read_file_content(repo_root, f"{task_dir}/codex-review-output.txt")
-    if codex_output:
-        context_parts.append(
-            f"=== {task_dir}/codex-review-output.txt (Codex Review Results) ===\n{codex_output}"
-        )
-
-    return "\n\n".join(context_parts)
 
 
 def build_implement_prompt(original_prompt: str, context: str) -> str:
@@ -559,82 +387,45 @@ Finish checklist and requirements:
 - Verify all acceptance criteria in prd.md are met"""
 
 
-def build_debug_prompt(original_prompt: str, context: str) -> str:
-    """Build complete prompt for Debug"""
-    return f"""# Debug Agent Task
-
-You are the Debug Agent in the Multi-Agent Pipeline (issue fixer).
-
-## Your Context
-
-Dev specs and Codex Review results:
-
-{context}
-
----
-
-## Your Task
-
-{original_prompt}
-
----
-
-## Workflow
-
-1. **Understand issues** - Analyze issues pointed out in Codex Review
-2. **Locate code** - Find positions that need fixing
-3. **Fix against specs** - Fix issues following dev specs
-4. **Verify fixes** - Run typecheck to ensure no new issues
-
-## Important Constraints
-
-- Do NOT execute git commit, only code modifications
-- Run typecheck after each fix to verify
-- Report which issues were fixed and which files were modified"""
-
 
 def get_research_context(repo_root: str, task_dir: str | None) -> str:
     """
-    Context for Research Agent
-
-    Research doesn't need much preset context, only needs:
-    1. Project structure overview (where spec directories are)
-    2. Optional research.jsonl (if there are specific search needs)
+    Context for Research Agent — project structure overview for spec directories.
     """
     context_parts = []
 
-    # 1. Project structure overview (uses constants for paths)
+    # 1. Project structure overview (dynamically discover spec directories)
     spec_path = f"{DIR_WORKFLOW}/{DIR_SPEC}"
+    spec_root = Path(repo_root) / DIR_WORKFLOW / DIR_SPEC
+
+    # Build spec tree dynamically
+    tree_lines = [f"{spec_path}/"]
+    if spec_root.is_dir():
+        pkg_dirs = sorted(d for d in spec_root.iterdir() if d.is_dir())
+        for i, pkg_dir in enumerate(pkg_dirs):
+            is_last = i == len(pkg_dirs) - 1
+            prefix = "└── " if is_last else "├── "
+            layers = sorted(d.name for d in pkg_dir.iterdir() if d.is_dir())
+            layer_info = f" ({', '.join(layers)})" if layers else ""
+            tree_lines.append(f"{prefix}{pkg_dir.name}/{layer_info}")
+
+    spec_tree = "\n".join(tree_lines)
+
     project_structure = f"""## Project Spec Directory Structure
 
 ```
-{spec_path}/
-├── shared/      # Cross-project common specs (TypeScript, code quality, git)
-├── frontend/    # Frontend standards
-├── backend/     # Backend standards
-└── guides/      # Thinking guides (cross-layer, code reuse, etc.)
-
-{DIR_WORKFLOW}/big-question/  # Known issues and pitfalls
+{spec_tree}
 ```
+
+To get structured package info, run: `python3 ./{DIR_WORKFLOW}/scripts/get_context.py --mode packages`
 
 ## Search Tips
 
 - Spec files: `{spec_path}/**/*.md`
-- Known issues: `{DIR_WORKFLOW}/big-question/`
 - Code search: Use Glob and Grep tools
 - Tech solutions: Use mcp__exa__web_search_exa or mcp__exa__get_code_context_exa"""
 
     context_parts.append(project_structure)
-
-    # 2. If task directory exists, try reading research.jsonl (optional)
-    if task_dir:
-        research_entries = read_jsonl_entries(repo_root, f"{task_dir}/research.jsonl")
-        if research_entries:
-            context_parts.append(
-                "\n## Additional Search Context (from research.jsonl)\n"
-            )
-            for file_path, content in research_entries:
-                context_parts.append(f"=== {file_path} ===\n{content}")
 
     return "\n\n".join(context_parts)
 
@@ -699,20 +490,53 @@ Provide structured search results including:
 - External references (if any)"""
 
 
+def _parse_hook_input(input_data: dict) -> tuple[str, str, dict]:
+    """Parse hook input across different platform formats.
+
+    Returns (subagent_type, original_prompt, tool_input).
+    Handles:
+    - Claude Code / Qoder / CodeBuddy / Droid: tool_name=Task|Agent, tool_input.subagent_type
+    - Cursor: tool_name=Task, tool_input.subagent_type
+    - Copilot CLI: toolName=task (camelCase key, lowercase value)
+    - Gemini CLI: tool_name IS the agent name (BeforeTool matcher already filtered)
+    - Kiro: agentSpawn hook, agent_name field at top level
+    """
+    tool_input = input_data.get("tool_input", {})
+
+    # Standard format: Task/Agent tool with subagent_type
+    tool_name = input_data.get("tool_name", "") or input_data.get("toolName", "")
+    if tool_name.lower() in ("task", "agent"):
+        return (
+            tool_input.get("subagent_type", ""),
+            tool_input.get("prompt", ""),
+            tool_input,
+        )
+
+    # Kiro: agentSpawn hook passes agent_name at top level
+    agent_name = input_data.get("agent_name", "")
+    if agent_name:
+        return agent_name, tool_input.get("prompt", input_data.get("prompt", "")), tool_input
+
+    # Gemini CLI: BeforeTool where tool_name IS the agent name
+    # (matcher already ensured it's one of our agents)
+    if tool_name in AGENTS_ALL:
+        return tool_name, tool_input.get("prompt", ""), tool_input
+
+    # Copilot CLI: toolName field (camelCase), value might be the agent name
+    tool_name_camel = input_data.get("toolName", "")
+    if tool_name_camel in AGENTS_ALL:
+        return tool_name_camel, input_data.get("toolArgs", ""), tool_input
+
+    return "", "", tool_input
+
+
 def main():
     try:
         input_data = json.load(sys.stdin)
     except json.JSONDecodeError:
         sys.exit(0)
 
-    tool_name = input_data.get("tool_name", "")
-
-    if tool_name not in ("Task", "Agent"):
-        sys.exit(0)
-
-    tool_input = input_data.get("tool_input", {})
-    subagent_type = tool_input.get("subagent_type", "")
-    original_prompt = tool_input.get("prompt", "")
+    subagent_type, original_prompt, tool_input = _parse_hook_input(input_data)
     cwd = input_data.get("cwd", os.getcwd())
 
     # Only handle subagent types we care about
@@ -727,7 +551,7 @@ def main():
     # Get current task directory (research doesn't require it)
     task_dir = get_current_task(repo_root)
 
-    # implement/check/debug need task directory
+    # implement/check need task directory
     if subagent_type in AGENTS_REQUIRE_TASK:
         if not task_dir:
             sys.exit(0)
@@ -735,9 +559,6 @@ def main():
         task_dir_full = os.path.join(repo_root, task_dir)
         if not os.path.exists(task_dir_full):
             sys.exit(0)
-
-        # Update current_phase in task.json (system-level enforcement)
-        update_current_phase(repo_root, task_dir, subagent_type)
 
     # Check for [finish] marker in prompt (check agent with finish context)
     is_finish_phase = "[finish]" in original_prompt.lower()
@@ -757,10 +578,6 @@ def main():
             # Regular check phase: use check context (full specs for self-fix loop)
             context = get_check_context(repo_root, task_dir)
             new_prompt = build_check_prompt(original_prompt, context)
-    elif subagent_type == AGENT_DEBUG:
-        assert task_dir is not None  # validated above
-        context = get_debug_context(repo_root, task_dir)
-        new_prompt = build_debug_prompt(original_prompt, context)
     elif subagent_type == AGENT_RESEARCH:
         # Research can work without task directory
         context = get_research_context(repo_root, task_dir)
@@ -771,13 +588,22 @@ def main():
     if not context:
         sys.exit(0)
 
-    # Return updated input with correct Claude Code PreToolUse format
+    # Return updated input — use a multi-format output that covers all platforms.
+    # Most platforms ignore unrecognized fields, so we include multiple formats.
+    # The platform picks whichever fields it understands.
+    updated = {**tool_input, "prompt": new_prompt}
     output = {
+        # Claude Code / Qoder / CodeBuddy / Droid format
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",
             "permissionDecision": "allow",
-            "updatedInput": {**tool_input, "prompt": new_prompt},
-        }
+            "updatedInput": updated,
+        },
+        # Cursor format
+        "permission": "allow",
+        "updated_input": updated,
+        # Gemini format
+        "updatedInput": updated,
     }
 
     print(json.dumps(output, ensure_ascii=False))
