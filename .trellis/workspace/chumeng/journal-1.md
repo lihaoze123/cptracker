@@ -71,3 +71,36 @@ Replaced Sheet-based add/edit problem forms with centered Dialog cards. Updated 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 3: Add fullscreen/card mode toggle to problem dialogs
+
+**Date**: 2026-04-22
+**Task**: Add fullscreen/card mode toggle to problem dialogs
+**Branch**: `main`
+
+### Summary
+
+Added fullscreen/card mode toggle to add/edit problem dialogs with reset-on-close pattern. Updated state-management spec.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `72a2483` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
