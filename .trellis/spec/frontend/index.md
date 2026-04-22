@@ -6,7 +6,7 @@
 
 ## Overview
 
-This directory contains guidelines for frontend development. Fill in each file with your project's specific conventions.
+This directory contains guidelines for frontend development, documented from actual codebase patterns.
 
 ---
 
@@ -14,26 +14,20 @@ This directory contains guidelines for frontend development. Fill in each file w
 
 | Guide | Description | Status |
 |-------|-------------|--------|
-| [Directory Structure](./directory-structure.md) | Module organization and file layout | To fill |
-| [Component Guidelines](./component-guidelines.md) | Component patterns, props, composition | To fill |
-| [Hook Guidelines](./hook-guidelines.md) | Custom hooks, data fetching patterns | To fill |
-| [State Management](./state-management.md) | Local state, global state, server state | To fill |
-| [Quality Guidelines](./quality-guidelines.md) | Code standards, forbidden patterns | To fill |
-| [Type Safety](./type-safety.md) | Type patterns, validation | To fill |
+| [Directory Structure](./directory-structure.md) | Module organization and file layout | Done |
+| [Component Guidelines](./component-guidelines.md) | Component patterns, props, composition | Done |
+| [Hook Guidelines](./hook-guidelines.md) | Custom hooks, data fetching patterns | Done |
+| [State Management](./state-management.md) | TanStack Query, Zustand, nuqs | Done |
+| [Quality Guidelines](./quality-guidelines.md) | ESLint, TypeScript, code review checklist | Done |
+| [Type Safety](./type-safety.md) | Domain types, mappers, Zod validation | Done |
 
 ---
 
-## How to Fill These Guidelines
+## Quick Reference
 
-For each guideline file:
-
-1. Document your project's **actual conventions** (not ideals)
-2. Include **code examples** from your codebase
-3. List **forbidden patterns** and why
-4. Add **common mistakes** your team has made
-
-The goal is to help AI assistants and new team members understand how YOUR project works.
-
----
-
-**Language**: All documentation should be written in **English**.
+- **Data access**: Always use `useProblems()` hook — never import storage backends directly
+- **Styling**: Tailwind CSS v4 + `cn()` utility for class merging
+- **Components**: Named exports, shadcn/ui primitives, controlled/uncontrolled pattern
+- **State**: TanStack Query (server), Zustand (global client), nuqs (URL), useState (local)
+- **Types**: Domain types with Chinese field names, separated from DB types via mappers
+- **Routes**: TanStack Router file-based — run `npm run generate` after route changes
