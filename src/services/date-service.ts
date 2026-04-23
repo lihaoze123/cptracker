@@ -107,14 +107,23 @@ export function timestampToTimeOnly(timestamp: number): string {
  * @returns Unix 时间戳（毫秒）
  */
 export function legacyDateStringToTimestamp(dateStr: string): number {
+  const trimmed = dateStr.trim();
+
+  if (/^\d+$/.test(trimmed)) {
+    const numericValue = Number.parseInt(trimmed, 10);
+    if (isValidTimestamp(numericValue)) {
+      return numericValue;
+    }
+  }
+
   // Try parsing as-is first
-  const date = new Date(dateStr);
+  const date = new Date(trimmed);
   if (!isNaN(date.getTime())) {
     return date.getTime();
   }
 
   // Try replacing / with -
-  const normalized = dateStr.replace(/\//g, '-');
+  const normalized = trimmed.replace(/\//g, '-');
   const normalizedDate = new Date(normalized);
   if (!isNaN(normalizedDate.getTime())) {
     return normalizedDate.getTime();
