@@ -189,6 +189,7 @@ export function useProblems() {
         await insertProblems(
           localProblems.map((p) => ({
             题目: p.题目,
+            题目名称: p.题目名称,
             难度: p.难度,
             题解: p.题解,
             关键词: p.关键词,
@@ -211,6 +212,7 @@ export function useProblems() {
         await dbImportProblems(
           cloudProblems.map((p) => ({
             题目: p.题目,
+            题目名称: p.题目名称,
             难度: p.难度,
             题解: p.题解,
             关键词: p.关键词,
